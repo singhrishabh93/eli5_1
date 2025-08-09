@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
-import 'routes.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/settings_screen.dart';
-
-void main() {
-  runApp(const MyApp());
-}
+import 'routes.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      title: 'ELI5 App',
       initialRoute: Routes.login,
       routes: {
         Routes.login: (context) => const LoginScreen(),

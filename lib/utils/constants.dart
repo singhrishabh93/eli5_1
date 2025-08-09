@@ -1,0 +1,1 @@
+const String appName = "ELI5 App";
