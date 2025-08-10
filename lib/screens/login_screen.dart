@@ -1,9 +1,44 @@
-
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';  // Adjust path as needed
 import '../widgets/google_sign_in_button.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool _isLoading = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final user = await AuthService.signInWithGoogle();
+
+    if (user != null) {
+      // Navigate to home on success
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } else {
+      // Show error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in failed. Please try again.')),
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,18 +51,18 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // App Logo
+                // App Icon or Logo
                 const Icon(
-                  Icons.lock_outline,
-                  size: 80,
-                  color: Colors.blueAccent,
+                  Icons.lightbulb_outline,
+                  size: 100,
+                  color: Colors.orangeAccent,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 const Text(
-                  "Welcome Back",
+                  "Welcome to ELI5",
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
@@ -35,128 +70,29 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 8),
 
                 Text(
-                  "Login to continue",
+                  "Ask anything, and we'll explain it simply!",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Colors.grey[700],
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 48),
 
-                // Email Field
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: "Email",
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : GoogleSignInButton(onPressed: _handleGoogleSignIn),
 
-                // Password Field
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Forgot Password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text("Forgot Password?"),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/home');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 24),
 
-                // Divider
-                Row(
-                  children: [
-                    const Expanded(child: Divider(thickness: 1)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        "or continue with",
-                        style: TextStyle(color: Colors.grey[700]),
-                      ),
-                    ),
-                    const Expanded(child: Divider(thickness: 1)),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Google Sign In Button
-                GoogleSignInButton(
-                  onPressed: () {
-                    // TODO: Add Google sign-in logic here
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Facebook Button (optional)
-                _socialButton(Icons.facebook, "Facebook"),
-
-                const SizedBox(height: 32),
-
-                // Sign up
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don’t have an account?"),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text("Sign Up"),
-                    ),
-                  ],
+                const Text(
+                  "By signing in, you agree to our Terms of Service and Privacy Policy",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _socialButton(IconData icon, String label) {
-    return OutlinedButton.icon(
-      onPressed: () {},
-      icon: Icon(icon, size: 24, color: Colors.blueAccent),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );

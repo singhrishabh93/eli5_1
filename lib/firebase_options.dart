@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA2yv4KgzcBJnB8AGMaGEf87oSMu-ZbdY0',
-    appId: '1:977368071773:android:33366df95feedd8f8397b4',
+    appId: '1:977368071773:android:fbdf34b0b1dd62c78397b4',
     messagingSenderId: '977368071773',
     projectId: 'eli5-564e1',
     storageBucket: 'eli5-564e1.firebasestorage.app',
@@ -59,10 +59,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCYhd-hSRQNecMRAz0UoNmXW-ABrPVn4I4',
-    appId: '1:977368071773:ios:282bfb9e68d293a28397b4',
+    appId: '1:977368071773:ios:47dcbc5a51a3dee88397b4',
     messagingSenderId: '977368071773',
     projectId: 'eli5-564e1',
     storageBucket: 'eli5-564e1.firebasestorage.app',
-    iosBundleId: 'com.example.eli5',
+    iosClientId: '977368071773-0d6orgsbqpodctv06mfr3umrv1s5u9mb.apps.googleusercontent.com',
+    iosBundleId: 'com.eli5.app',
   );
+
 }
