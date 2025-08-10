@@ -131,13 +131,6 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
 
-      // Reusable Bottom Navigation Bar
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() => _selectedIndex = index);
-        },
-      ),
     );
   }
 

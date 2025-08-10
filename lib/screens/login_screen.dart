@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';  // Adjust path as needed
+import '../services/auth_service.dart';
 import '../widgets/google_sign_in_button.dart';
+import '../widgets/bottom_nav_bar.dart'; // Import your BottomNavBar
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,31 +14,34 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   Future<void> _handleGoogleSignIn() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     final user = await AuthService.signInWithGoogle();
 
-    if (user != null) {
-      // Navigate to home on success
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } else {
-      // Show error
-      if (mounted) {
+    if (mounted) {
+      if (user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const BottomNavBar(initialIndex: 0),
+          ),
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign in failed. Please try again.')),
         );
       }
+      setState(() => _isLoading = false);
     }
+  }
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  void _skipSignIn() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const BottomNavBar(initialIndex: 0),
+      ),
+    );
   }
 
   @override
@@ -51,14 +55,12 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // App Icon or Logo
                 const Icon(
                   Icons.lightbulb_outline,
                   size: 100,
                   color: Colors.orangeAccent,
                 ),
                 const SizedBox(height: 24),
-
                 const Text(
                   "Welcome to ELI5",
                   style: TextStyle(
@@ -68,23 +70,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-
-                Text(
+                const Text(
                   "Ask anything, and we'll explain it simply!",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
-
                 _isLoading
                     ? const CircularProgressIndicator()
                     : GoogleSignInButton(onPressed: _handleGoogleSignIn),
-
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: _skipSignIn,
+                  child: const Text(
+                    "Skip for now",
+                    style: TextStyle(fontSize: 16, color: Colors.blue),
+                  ),
+                ),
                 const SizedBox(height: 24),
-
                 const Text(
                   "By signing in, you agree to our Terms of Service and Privacy Policy",
                   textAlign: TextAlign.center,
