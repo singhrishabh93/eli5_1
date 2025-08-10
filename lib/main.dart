@@ -1,4 +1,5 @@
 import 'package:eli5/firebase_options.dart';
+import 'package:eli5/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -25,8 +26,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: Routes.login,
+      initialRoute: Routes.splash, // Start from splash
       routes: {
+        Routes.splash: (context) => const SplashScreen(),
         Routes.login: (context) => const LoginScreen(),
         Routes.home: (context) => HomeScreen(),
         Routes.history: (context) => HistoryScreen(),
