@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:eli5/widgets/appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import '../services/openai_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,7 +14,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  late TabController _tabController;
+  final _selectedSegment = ValueNotifier<String>('five');
+
   final _searchController = TextEditingController();
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
 
@@ -42,8 +44,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
-    _tabController = TabController(length: 3, vsync: this);
 
     if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
       _searchController.text = widget.initialQuery!;
@@ -100,7 +100,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _tabController.dispose();
     _gradientController.dispose();
     _textAnimController.dispose();
     _suggestionTimer.cancel();
@@ -139,38 +138,55 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  // Tabs
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: Colors.black,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: Colors.black,
-                    tabs: const [
-                      Tab(text: "Like I’m 5"),
-                      Tab(text: "Like I’m 15"),
-                      Tab(text: "Like I’m an Adult"),
-                    ],
+                  // AdvancedSegment Tabs
+                  SizedBox(
+                    height: 50,
+                    child: AdvancedSegment(
+                      controller: _selectedSegment,
+                      segments: const {
+                        'five': "Like I’m 5",
+                        'fifteen': "Like I’m 15",
+                        'adult': "Like I’m an Adult",
+                      },
+                      backgroundColor: const Color(0xFFFF5266),
+                      sliderColor: const Color(0xFFFF3951),
+                      borderRadius: BorderRadius.circular(8),
+                      activeStyle: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'Mulish',
+                        fontWeight: FontWeight.w600,
+                      ),
+                      inactiveStyle: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'Mulish',
+                        fontWeight: FontWeight.w500,
+                      ),
+                      itemPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    ),
                   ),
                   const SizedBox(height: 12),
-    
+
                   // Content
                   Expanded(
                     child: _isLoading
                         ? const Center(child: CircularProgressIndicator())
-                        : TabBarView(
-                            controller: _tabController,
-                            children: [
-                              _buildExplanationText(_explanations[0]),
-                              _buildExplanationText(_explanations[1]),
-                              _buildExplanationText(_explanations[2]),
-                            ],
+                        : ValueListenableBuilder<String>(
+                            valueListenable: _selectedSegment,
+                            builder: (context, value, _) {
+                              int index = value == 'five'
+                                  ? 0
+                                  : value == 'fifteen'
+                                      ? 1
+                                      : 2;
+                              return _buildExplanationText(_explanations[index]);
+                            },
                           ),
                   ),
                 ],
               ),
             ),
           ),
-    
+
           // Search bar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -259,7 +275,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   decoration: const InputDecoration(
                                     contentPadding: EdgeInsets.symmetric(horizontal: 0),
                                     border: InputBorder.none,
-                                    // hintText: "Ask Nova",
                                     hintStyle: TextStyle(
                                       color: Colors.black,
                                       fontSize: 16,
