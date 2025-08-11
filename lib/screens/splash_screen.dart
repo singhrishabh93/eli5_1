@@ -67,9 +67,9 @@ class _SplashScreenState extends State<SplashScreen>
             FadeTransition(
               opacity: _fadeAnimation,
               child: Text(
-                "Ask anything, and we'll explain it simply!",
+                "Explain like I'm 5",
                 style: GoogleFonts.mulish(
-                  fontSize: 14,
+                  fontSize: 24,
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
                 ),

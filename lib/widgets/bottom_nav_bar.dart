@@ -1,8 +1,8 @@
+import 'dart:io';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../screens/home_screen.dart';
-import '../screens/history_screen.dart';
-import '../screens/favorites_screen.dart';
-import '../screens/settings_screen.dart';
 
 class BottomNavBar extends StatefulWidget {
   final int initialIndex;
@@ -13,44 +13,51 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  late int _currentIndex;
-
-  // Put your screen widgets here (no bottomNavigationBar inside those screens)
-  final List<Widget> _screens = [
-    HomeScreen(),
-    HistoryScreen(),
-    FavoritesScreen(),
-    SettingsScreen(),
-  ];
+  late int _selectedIndex;
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;
+    _selectedIndex = widget.initialIndex;
+  }
+
+  static final List<Widget> _widgetOptions = <Widget>[
+    const HomeScreen(),
+    const Center(child: Text("Discover Screen")),
+    const Center(child: Text("History Screen")),
+    const Center(child: Text("Favourites Screen")),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack preserves the state of each tab
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.black,
-        showUnselectedLabels: true,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Favorites'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
+      resizeToAvoidBottomInset: true,
+      body: _widgetOptions.elementAt(_selectedIndex),
+      bottomNavigationBar: SizedBox(
+        height: kIsWeb ? 70 : Platform.isIOS ? 95 : 90,
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          currentIndex: _selectedIndex,
+          selectedItemColor: const Color(0xffFF3951),
+          unselectedItemColor: Colors.black,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          onTap: _onItemTapped,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(FluentIcons.home_12_filled, size: 28), label: ''),
+            BottomNavigationBarItem(icon: Icon(FluentIcons.earth_16_filled, size: 28), label: ''),
+            BottomNavigationBarItem(icon: Icon(FluentIcons.history_16_filled, size: 28), label: ''),
+            BottomNavigationBarItem(icon: Icon(FluentIcons.heart_12_filled, size: 28), label: ''),
+          ],
+        ),
       ),
     );
   }
