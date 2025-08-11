@@ -128,180 +128,183 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: customAppBar(),
       resizeToAvoidBottomInset: true,
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // AdvancedSegment Tabs
-                  SizedBox(
-                    height: 50,
-                    child: AdvancedSegment(
-                      controller: _selectedSegment,
-                      segments: const {
-                        'five': "Like I’m 5",
-                        'fifteen': "Like I’m 15",
-                        'adult': "Like I’m an Adult",
-                      },
-                      backgroundColor: const Color(0xFFFF5266),
-                      sliderColor: const Color(0xFFFF3951),
-                      borderRadius: BorderRadius.circular(8),
-                      activeStyle: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'Mulish',
-                        fontWeight: FontWeight.w600,
+          Image.asset("assets/bg.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    // AdvancedSegment Tabs
+                    SizedBox(
+                      height: 50,
+                      child: AdvancedSegment(
+                        controller: _selectedSegment,
+                        segments: const {
+                          'five': "Like I’m 5",
+                          'fifteen': "Like I’m 15",
+                          'adult': "Like I’m an Adult",
+                        },
+                        backgroundColor: const Color(0xFFFF5266),
+                        sliderColor: const Color(0xFFFF3951),
+                        borderRadius: BorderRadius.circular(8),
+                        activeStyle: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Mulish',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        inactiveStyle: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Mulish',
+                          fontWeight: FontWeight.w500,
+                        ),
+                        itemPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       ),
-                      inactiveStyle: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'Mulish',
-                        fontWeight: FontWeight.w500,
-                      ),
-                      itemPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Content
-                  Expanded(
-                    child: _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ValueListenableBuilder<String>(
-                            valueListenable: _selectedSegment,
-                            builder: (context, value, _) {
-                              int index = value == 'five'
-                                  ? 0
-                                  : value == 'fifteen'
-                                      ? 1
-                                      : 2;
-                              return _buildExplanationText(_explanations[index]);
-                            },
-                          ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+        
+                    // Content
+                    Expanded(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ValueListenableBuilder<String>(
+                              valueListenable: _selectedSegment,
+                              builder: (context, value, _) {
+                                int index = value == 'five'
+                                    ? 0
+                                    : value == 'fifteen'
+                                        ? 1
+                                        : 2;
+                                return _buildExplanationText(_explanations[index]);
+                              },
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: AnimatedBuilder(
-              animation: _gradientController,
-              builder: (context, child) {
-                return Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      colors: [const Color(0xFFE62940), const Color(0xFFFFD700)],
-                      stops: [0, 1.0],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      transform: GradientRotation(_gradientController.value * 6.28),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(1.5),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+        
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: AnimatedBuilder(
+                animation: _gradientController,
+                builder: (context, child) {
+                  return Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [const Color(0xFFE62940), const Color(0xFFFFD700)],
+                        stops: [0, 1.0],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        transform: GradientRotation(_gradientController.value * 6.28),
                       ),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                            child: Image.asset("assets/icons/star.png", height: 20, width: 20),
-                          ),
-                          Expanded(
-                            child: Stack(
-                              alignment: Alignment.centerLeft,
-                              children: [
-                                if (!_isUserTyping)
-                                  IgnorePointer(
-                                    ignoring: true,
-                                    child: AnimatedBuilder(
-                                      animation: _textAnimController,
-                                      builder: (context, child) {
-                                        return SizedBox(
-                                          height: 30,
-                                          child: ClipRect(
-                                            child: Stack(
-                                              children: [
-                                                SlideTransition(
-                                                  position: _currentTextOffsetAnimation,
-                                                  child: Align(
-                                                    alignment: Alignment.centerLeft,
-                                                    child: Text(
-                                                      " ${_wearSuggestions[_currentSuggestionIndex]}",
-                                                      style: const TextStyle(
-                                                        color: Colors.black54,
-                                                        fontSize: 16,
-                                                        fontFamily: "SatoshiR",
-                                                        fontStyle: FontStyle.italic,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(1.5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                              child: Image.asset("assets/icons/star.png", height: 20, width: 20),
+                            ),
+                            Expanded(
+                              child: Stack(
+                                alignment: Alignment.centerLeft,
+                                children: [
+                                  if (!_isUserTyping)
+                                    IgnorePointer(
+                                      ignoring: true,
+                                      child: AnimatedBuilder(
+                                        animation: _textAnimController,
+                                        builder: (context, child) {
+                                          return SizedBox(
+                                            height: 30,
+                                            child: ClipRect(
+                                              child: Stack(
+                                                children: [
+                                                  SlideTransition(
+                                                    position: _currentTextOffsetAnimation,
+                                                    child: Align(
+                                                      alignment: Alignment.centerLeft,
+                                                      child: Text(
+                                                        " ${_wearSuggestions[_currentSuggestionIndex]}",
+                                                        style: const TextStyle(
+                                                          color: Colors.black54,
+                                                          fontSize: 16,
+                                                          fontFamily: "SatoshiR",
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                                SlideTransition(
-                                                  position: _nextTextOffsetAnimation,
-                                                  child: Align(
-                                                    alignment: Alignment.centerLeft,
-                                                    child: Text(
-                                                      " ${_wearSuggestions[_nextSuggestionIndex]}",
-                                                      style: const TextStyle(
-                                                        color: Colors.black54,
-                                                        fontSize: 16,
-                                                        fontFamily: "SatoshiR",
-                                                        fontStyle: FontStyle.italic,
+                                                  SlideTransition(
+                                                    position: _nextTextOffsetAnimation,
+                                                    child: Align(
+                                                      alignment: Alignment.centerLeft,
+                                                      child: Text(
+                                                        " ${_wearSuggestions[_nextSuggestionIndex]}",
+                                                        style: const TextStyle(
+                                                          color: Colors.black54,
+                                                          fontSize: 16,
+                                                          fontFamily: "SatoshiR",
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      },
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                TextField(
-                                  controller: _searchController,
-                                  decoration: const InputDecoration(
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 0),
-                                    border: InputBorder.none,
-                                    hintStyle: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                      fontFamily: "SatoshiR",
+                                  TextField(
+                                    controller: _searchController,
+                                    decoration: const InputDecoration(
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 0),
+                                      border: InputBorder.none,
+                                      hintStyle: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontFamily: "SatoshiR",
+                                      ),
                                     ),
+                                    onSubmitted: (_) => _getExplanation(),
                                   ),
-                                  onSubmitted: (_) => _getExplanation(),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          GestureDetector(
-                            onTap: _getExplanation,
-                            child: const Padding(
-                              padding: EdgeInsets.only(right: 16.0),
-                              child: Icon(Icons.search, color: Colors.black, size: 24),
+                            GestureDetector(
+                              onTap: _getExplanation,
+                              child: const Padding(
+                                padding: EdgeInsets.only(right: 16.0),
+                                child: Icon(Icons.search, color: Colors.black, size: 24),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),]
       ),
     );
   }

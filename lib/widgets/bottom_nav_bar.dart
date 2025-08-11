@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:eli5/screens/discover_screen.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   static final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
-    const Center(child: Text("Discover Screen")),
+    const DiscoverScreen(),
     const Center(child: Text("History Screen")),
     const Center(child: Text("Favourites Screen")),
   ];
