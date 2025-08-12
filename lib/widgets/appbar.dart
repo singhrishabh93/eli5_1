@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 AppBar customAppBar() {
   return AppBar(
     elevation: 0,
+    scrolledUnderElevation: 0,
     backgroundColor: Colors.transparent,
     titleSpacing: 0, // Removes default Material AppBar spacing
     centerTitle: true,

@@ -108,8 +108,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     return Scaffold(
       // backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        // backgroundColor: const Color(0xFF121212),
+        backgroundColor: const Color(0xFFFFFFFF),
         elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           "Discover",
           style: GoogleFonts.mulish(
@@ -222,7 +223,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                       )
                                     : Container(
                                         height: 200,
-                                        color: Color(0xffFF3951),
+                                        color: Color(0xffFF5266),
                                         child: const Center(
                                           child: Icon(Icons.image,
                                               color: Colors.white),
