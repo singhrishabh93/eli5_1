@@ -3,7 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 
 class HighlightsWidget extends StatelessWidget {
-  const HighlightsWidget({Key? key}) : super(key: key);
+  final Function(String) onCardTap; // Callback to start search
+
+  const HighlightsWidget({Key? key, required this.onCardTap}) : super(key: key);
 
   void _showPodcastPlayer(BuildContext context) {
     showModalBottomSheet(
@@ -14,8 +16,8 @@ class HighlightsWidget extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return PodcastPlayerModal(
-          audioUrl: "https://www.listennotes.com/e/p/a5ae21acf75a43538b635cf6b089f0b3/", // replace with actual
+        return const PodcastPlayerModal(
+          audioUrl: "https://www.listennotes.com/e/p/a5ae21acf75a43538b635cf6b089f0b3/",
           title: "Podcast Daily",
           subtitle:
               "Aug 13 • 3 min  Unions push AI safeguards, US-China tariff truce, Food influencers clash, and more",
@@ -34,7 +36,6 @@ class HighlightsWidget extends StatelessWidget {
         _podcastSection(context),
         const SizedBox(height: 24),
 
-        // Stories to explore
         _sectionWithMagazineGrid(
           "Stories to explore",
           [
@@ -43,22 +44,24 @@ class HighlightsWidget extends StatelessWidget {
               title: "\$5M grandparent scam targeting seniors dismantled",
               subtitle:
                   "How the scam operated, lavish lifestyles, AI’s role, and more",
+              onTap: onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?2",
               title: "Alaska braces for record-breaking glacial flood threat",
               subtitle: "Communities preparing for glacial surge",
+              onTap: onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?3",
               title: "Adidas faces backlash over Oaxaca-inspired sandal",
               subtitle: "Cultural debate over new shoe design",
+              onTap: onCardTap,
             ),
           ],
         ),
         const SizedBox(height: 24),
 
-        // Ideas to explore
         _sectionWithMagazineGrid(
           "Ideas to explore",
           [
@@ -66,22 +69,24 @@ class HighlightsWidget extends StatelessWidget {
               imageUrl: "https://picsum.photos/400/400?4",
               title: "Build connections and thrive in a new city",
               subtitle: "Tips to settle and connect faster",
+              onTap: onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?5",
               title: "Embrace chaos gardening for surprise blooms",
               subtitle: "Let nature surprise you",
+              onTap: onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?6",
               title: "Discover morning routines for better productivity",
               subtitle: "Start your day right",
+              onTap: onCardTap,
             ),
           ],
         ),
         const SizedBox(height: 24),
 
-        // Topics you might enjoy
         _sectionWithMagazineGrid(
           "Topics I thought you'd enjoy",
           [
@@ -89,16 +94,19 @@ class HighlightsWidget extends StatelessWidget {
               imageUrl: "https://picsum.photos/400/400?7",
               title: "Find your zen with simple breathwork tips",
               subtitle: "Easy mindfulness breathing",
+              onTap: onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?8",
               title: "Navigate airport madness with ease",
               subtitle: "Travel like a pro",
+              onTap: onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?9",
               title: "Learn to cook one new dish a week",
               subtitle: "Expand your culinary skills",
+              onTap: onCardTap,
             ),
           ],
         ),
@@ -210,69 +218,73 @@ class HighlightsWidget extends StatelessWidget {
     required String imageUrl,
     required String title,
     required String subtitle,
+    required Function(String) onTap,
   }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Stack(
-        children: [
-          Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.6),
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.6),
+    return GestureDetector(
+      onTap: () => onTap(title),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.6),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.mulish(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const Icon(Icons.more_vert,
+                          color: Colors.white, size: 18),
+                    ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.mulish(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.mulish(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const Icon(Icons.more_vert,
-                        color: Colors.white, size: 18),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.mulish(
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -341,7 +353,7 @@ class _PodcastPlayerModalState extends State<PodcastPlayerModal> {
           CircleAvatar(
             radius: 48,
             backgroundImage: NetworkImage(
-              "https://picsum.photos/200", // replace with actual podcast cover
+              "https://picsum.photos/200",
             ),
           ),
           const SizedBox(height: 16),

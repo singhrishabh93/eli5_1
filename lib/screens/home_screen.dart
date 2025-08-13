@@ -192,7 +192,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                       Expanded(
                         child: _showHighlights
-                            ? const HighlightsWidget()
+                            ? HighlightsWidget(
+                                onCardTap: (query) {
+                                  setState(() {
+                                    _searchController.text = query;
+                                    _showHighlights = false;
+                                  });
+                                  _getExplanation();
+                                },
+                              )
                             : (_isLoading
                                   ? const Center(
                                       child: CircularProgressIndicator(),
