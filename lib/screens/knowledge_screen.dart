@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:eli5/utils/knowledge_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -51,81 +52,47 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   }
 
   Future<void> fetchUselessFact() async {
-  try {
-    List<Map<String, String>> facts = [];
-
-    for (int i = 0; i < 6; i++) {
-      final res = await http.get(Uri.parse("https://uselessfacts.jsph.pl/random.json?language=en"));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        facts.add({"fact": data["text"] ?? "No fact available"});
-      }
-    }
-
-    setState(() {
-      funScienceFacts = facts;
-    });
-  } catch (e) {
-    debugPrint("Error fetching facts: $e");
-  } finally {
-    setState(() => isLoadingFacts = false);
-  }
-}
-
-
-  Future<void> fetchTodayInHistory() async {
-  try {
-    final res = await http.get(Uri.parse("https://today.zenquotes.io/api"));
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      final events = data["data"]["Events"] as List<dynamic>;
-
-      // Fetch images for first 5 events
-      List<Map<String, String>> eventsWithImages = [];
-      for (var event in events.take(5)) {
-        String headline = event["text"] ?? "";
-        String wikiImage = await fetchWikipediaImage(headline);
-
-        eventsWithImages.add({
-          "image": wikiImage.isNotEmpty
-              ? wikiImage
-              : "https://upload.wikimedia.org/wikipedia/commons/3/3c/Moon_landing.jpg", // fallback
-          "headline": headline,
-          "text": headline
-        });
-      }
-
-      setState(() {
-        todayInHistory = eventsWithImages;
-      });
-    }
-  } catch (e) {
-    debugPrint("Error fetching history: $e");
-  } finally {
-    setState(() => isLoadingHistory = false);
-  }
-}
-
-/// Fetches the first image from Wikipedia for a given search term
-Future<String> fetchWikipediaImage(String query) async {
-  try {
-    final url =
-        "https://en.wikipedia.org/w/api.php?action=query&titles=${Uri.encodeComponent(query)}&prop=pageimages&format=json&pithumbsize=500";
-    final res = await http.get(Uri.parse(url));
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      final pages = data["query"]["pages"] as Map<String, dynamic>;
-      for (var page in pages.values) {
-        if (page["thumbnail"] != null && page["thumbnail"]["source"] != null) {
-          return page["thumbnail"]["source"];
+    try {
+      List<Map<String, String>> facts = [];
+      for (int i = 0; i < 6; i++) {
+        final res = await http.get(Uri.parse("https://uselessfacts.jsph.pl/random.json?language=en"));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          facts.add({"fact": data["text"] ?? "No fact available"});
         }
       }
+      setState(() {
+        funScienceFacts = facts;
+      });
+    } catch (e) {
+      debugPrint("Error fetching facts: $e");
+    } finally {
+      setState(() => isLoadingFacts = false);
     }
-  } catch (e) {
-    debugPrint("Error fetching Wikipedia image: $e");
   }
-  return "";
-}
+
+  Future<void> fetchTodayInHistory() async {
+    try {
+      final res = await http.get(Uri.parse("https://today.zenquotes.io/api"));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final events = data["data"]["Events"] as List<dynamic>;
+        List<Map<String, String>> eventsList = [];
+        for (var event in events.take(5)) {
+          String headline = event["text"] ?? "";
+          eventsList.add({"headline": headline, "text": headline});
+        }
+        setState(() {
+          todayInHistory = eventsList;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching history: $e");
+    } finally {
+      setState(() => isLoadingHistory = false);
+    }
+  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -151,20 +118,19 @@ Future<String> fetchWikipediaImage(String query) async {
       ),
       body: Stack(
         children: [
-          Image.asset("assets/bg.png",
-              fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Image.asset("assets/bg.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity),
           ListView(
             padding: const EdgeInsets.symmetric(vertical: 12),
             children: [
               _buildSectionTitle("Fun Science Facts"),
               isLoadingFacts
                   ? const Center(child: CircularProgressIndicator())
-                  : _buildHorizontalCards(funScienceFacts, Colors.orangeAccent),
+                  : _buildHorizontalCards(funScienceFacts, isNeon: true),
 
               _buildSectionTitle("Today in History"),
               isLoadingHistory
                   ? const Center(child: CircularProgressIndicator())
-                  : _buildHorizontalImageCards(todayInHistory),
+                  : _buildGradientCards(todayInHistory),
 
               _buildSectionTitle("Inventions & Discoveries"),
               _buildHorizontalImageCards(inventions),
@@ -175,7 +141,6 @@ Future<String> fetchWikipediaImage(String query) async {
               _buildSectionTitle("Random Questions"),
               _buildHorizontalCards(
                 randomQuestions.map((q) => {"fact": q}).toList(),
-                Colors.tealAccent,
               ),
             ],
           ),
@@ -198,7 +163,7 @@ Future<String> fetchWikipediaImage(String query) async {
     );
   }
 
-  Widget _buildHorizontalCards(List<Map<String, String>> data, Color color, {bool isLarge = false}) {
+  Widget _buildHorizontalCards(List<Map<String, String>> data, {bool isLarge = false, bool isNeon = false}) {
     return SizedBox(
       height: isLarge ? 200 : 120,
       child: ListView.separated(
@@ -207,11 +172,14 @@ Future<String> fetchWikipediaImage(String query) async {
         itemCount: data.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
+          final cardColor = isNeon
+              ? (neonColors..shuffle()).first // random neon color each time
+              : Colors.grey.shade300;
           return Container(
             width: isLarge ? 220 : 180,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color,
+              color: cardColor,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(
@@ -225,6 +193,53 @@ Future<String> fetchWikipediaImage(String query) async {
                   color: Colors.black87,
                 ),
               ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGradientCards(List<Map<String, String>> data) {
+    return SizedBox(
+      height: 250,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: data.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final gradient = pastelGradients[index % pastelGradients.length];
+          return Container(
+            width: 260,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data[index]["headline"] ?? "",
+                  style: GoogleFonts.mulish(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  data[index]["text"] ?? "",
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.mulish(fontSize: 14, color: Colors.black87),
+                ),
+              ],
             ),
           );
         },
@@ -248,26 +263,12 @@ Future<String> fetchWikipediaImage(String query) async {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                )
+                BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: Image.network(
-                    item["image"]!,
-                    height: 140,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(

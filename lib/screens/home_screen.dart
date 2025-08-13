@@ -34,11 +34,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Timer _suggestionTimer;
 
   final List<String> _wearSuggestions = [
-    "Ask eli5 for party outfits",
-    "Ask eli5 for date fit check",
-    "Ask eli5 for coffee outfit ideas",
-    "Ask eli5 for cute summer outfits",
-    "Ask eli5 for workwear suggestions",
+    "Ask eli5 why popcorn pops",
+    "Ask eli5 what is cloud computing",
+    "Ask eli5 why ice floats on water",
+    "Ask eli5 what is ChatGPT",
+    "Ask eli5 why rainbows happen",
   ];
   int _currentSuggestionIndex = 0;
   int _nextSuggestionIndex = 1;
@@ -319,16 +319,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                         child: Text(
                                                           " ${_wearSuggestions[_currentSuggestionIndex]}",
                                                           style:
-                                                              const TextStyle(
-                                                                color: Colors
-                                                                    .black54,
-                                                                fontSize: 16,
-                                                                fontFamily:
-                                                                    "SatoshiR",
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                              ),
+                                                              GoogleFonts.mulish(
+                                                            color: Colors.black87,
+                                                            fontSize: 16,
+                                                            fontStyle: FontStyle.italic,
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
