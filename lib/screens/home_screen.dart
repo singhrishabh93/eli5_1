@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:eli5/widgets/animated_text.dart';
 import 'package:eli5/widgets/appbar.dart';
+import 'package:eli5/widgets/highlights_widget.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _selectedSegment = ValueNotifier<String>('five');
   final _searchController = TextEditingController();
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
+  bool _showHighlights = false; // Toggle to show highlights or explanations
 
   List<String> _explanations = ["", "", ""];
   bool _isLoading = false;
@@ -189,37 +191,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         const SizedBox(height: 12),
 
                       Expanded(
-                        child: _isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : ValueListenableBuilder<String>(
-                                valueListenable: _selectedSegment,
-                                builder: (context, value, _) {
-                                  int index = value == 'five'
-                                      ? 0
-                                      : value == 'fifteen'
-                                      ? 1
-                                      : 2;
+                        child: _showHighlights
+                            ? const HighlightsWidget()
+                            : (_isLoading
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : ValueListenableBuilder<String>(
+                                      valueListenable: _selectedSegment,
+                                      builder: (context, value, _) {
+                                        int index = value == 'five'
+                                            ? 0
+                                            : value == 'fifteen'
+                                            ? 1
+                                            : 2;
 
-                                  if (_explanations.every((e) => e.isEmpty)) {
-                                    return const Center(
-                                      child: AnimatedGradientText(
-                                        text: "Hey Awesome!",
-                                      ),
-                                    );
-                                  }
+                                        // If no explanations, show "Hey Awesome!"
+                                        if (_explanations.every(
+                                          (e) => e.isEmpty,
+                                        )) {
+                                          return const Center(
+                                            child: AnimatedGradientText(
+                                              text: "Hey Awesome!",
+                                            ),
+                                          );
+                                        }
 
-                                  return ListView(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    children: [
-                                      _buildExplanationText(
-                                        _explanations[index],
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
+                                        return ListView(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                          children: [
+                                            _buildExplanationText(
+                                              _explanations[index],
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    )),
                       ),
                     ],
                   ),
@@ -263,10 +272,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   left: 16.0,
                                   right: 8.0,
                                 ),
-                                child: Image.asset(
-                                  "assets/icons/star.png",
-                                  height: 20,
-                                  width: 20,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _showHighlights =
+                                          !_showHighlights; // toggle instead of always true
+                                    });
+                                  },
+
+                                  child: Image.asset(
+                                    "assets/icons/star.png",
+                                    height: 20,
+                                    width: 20,
+                                  ),
                                 ),
                               ),
                               Expanded(

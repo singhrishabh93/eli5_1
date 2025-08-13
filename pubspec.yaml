@@ -49,6 +49,8 @@ dependencies:
   fluentui_system_icons: ^1.1.273
   flutter_advanced_segment: ^3.1.0
   flutter_animate: ^4.5.2
+  just_audio: ^0.10.4
+  audioplayers: ^6.5.0
 
 dev_dependencies:
   flutter_test:
