@@ -1,17 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:just_audio/just_audio.dart';
 
 class HighlightsWidget extends StatelessWidget {
   const HighlightsWidget({Key? key}) : super(key: key);
 
+  void _showPodcastPlayer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return PodcastPlayerModal(
+          audioUrl: "https://www.listennotes.com/e/p/a5ae21acf75a43538b635cf6b089f0b3/", // replace with actual
+          title: "Podcast Daily",
+          subtitle:
+              "Aug 13 • 3 min  Unions push AI safeguards, US-China tariff truce, Food influencers clash, and more",
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       children: [
         _greeting(),
         const SizedBox(height: 16),
-        _podcastSection(),
+        _podcastSection(context),
         const SizedBox(height: 24),
 
         // Stories to explore
@@ -96,15 +116,15 @@ class HighlightsWidget extends StatelessWidget {
     );
   }
 
-  Widget _podcastSection() {
+  Widget _podcastSection(BuildContext context) {
     return Column(
       children: [
-        _podcastCard(),
+        _podcastCard(context),
       ],
     );
   }
 
-  Widget _podcastCard() {
+  Widget _podcastCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.black,
@@ -128,7 +148,7 @@ class HighlightsWidget extends StatelessWidget {
                   fontSize: 14)),
           const SizedBox(height: 12),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () => _showPodcastPlayer(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.black,
@@ -252,6 +272,95 @@ class HighlightsWidget extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class PodcastPlayerModal extends StatefulWidget {
+  final String audioUrl;
+  final String title;
+  final String subtitle;
+
+  const PodcastPlayerModal({
+    Key? key,
+    required this.audioUrl,
+    required this.title,
+    required this.subtitle,
+  }) : super(key: key);
+
+  @override
+  State<PodcastPlayerModal> createState() => _PodcastPlayerModalState();
+}
+
+class _PodcastPlayerModalState extends State<PodcastPlayerModal> {
+  final _player = AudioPlayer();
+  bool _isLoading = true;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    try {
+      await _player.setUrl(widget.audioUrl);
+      setState(() => _isLoading = false);
+      _player.play();
+      setState(() => _isPlaying = true);
+    } catch (e) {
+      debugPrint("Error loading audio: $e");
+    }
+  }
+
+  void _togglePlayPause() {
+    if (_isPlaying) {
+      _player.pause();
+    } else {
+      _player.play();
+    }
+    setState(() => _isPlaying = !_isPlaying);
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 48,
+            backgroundImage: NetworkImage(
+              "https://picsum.photos/200", // replace with actual podcast cover
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(widget.title,
+              style: GoogleFonts.mulish(
+                  fontSize: 20, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text(widget.subtitle,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.mulish(
+                  fontSize: 14, color: Colors.grey[600])),
+          const SizedBox(height: 24),
+          _isLoading
+              ? const CircularProgressIndicator()
+              : IconButton(
+                  iconSize: 64,
+                  icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                  onPressed: _togglePlayPause,
+                ),
         ],
       ),
     );
