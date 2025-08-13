@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:eli5/screens/discover_screen.dart';
+import 'package:eli5/screens/history_screen.dart';
+import 'package:eli5/screens/knowledge_screen.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,8 +27,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
   static final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
     const DiscoverScreen(),
-    const Center(child: Text("History Screen")),
-    const Center(child: Text("Favourites Screen")),
+    const KnowledgeScreen(),
+    HistoryScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -55,8 +57,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
           items: const [
             BottomNavigationBarItem(icon: Icon(FluentIcons.home_12_filled, size: 28), label: ''),
             BottomNavigationBarItem(icon: Icon(FluentIcons.earth_16_filled, size: 28), label: ''),
-            BottomNavigationBarItem(icon: Icon(FluentIcons.history_16_filled, size: 28), label: ''),
-            BottomNavigationBarItem(icon: Icon(FluentIcons.heart_12_filled, size: 28), label: ''),
+            BottomNavigationBarItem(icon: Icon(FluentIcons.data_trending_16_filled, size: 28), label: ''),
+            BottomNavigationBarItem(icon: Icon(FluentIcons.library_16_filled, size: 28), label: ''),
           ],
         ),
       ),

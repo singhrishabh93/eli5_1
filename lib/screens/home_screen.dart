@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'package:eli5/widgets/animated_text.dart';
 import 'package:eli5/widgets/appbar.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -118,10 +120,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     try {
       final results = await _geminiService.fetchExplanations(query);
-      setState(() => _explanations = results);
+      setState(() {
+        _explanations = results;
+        _searchController.clear(); // ⬅ Clear search bar after search
+      });
     } catch (e) {
       setState(() {
         _explanations = ["Error: $e", "", ""];
+        _searchController.clear(); // ⬅ Also clear if there's an error
       });
     } finally {
       setState(() => _isLoading = false);
@@ -151,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       // Show tab bar only if there is at least one response
                       if (_explanations.any((e) => e.isNotEmpty))
                         SizedBox(
-                          height: 50,
+                          height: 60,
                           child: AdvancedSegment(
                             controller: _selectedSegment,
                             segments: const {
@@ -159,9 +165,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               'fifteen': "Like I’m 15",
                               'adult': "Like I’m an Adult",
                             },
-                            backgroundColor: const Color(0xFFFF5266),
-                            sliderColor: const Color(0xFFFF3951),
-                            borderRadius: BorderRadius.circular(8),
+                            backgroundColor: const Color(0xFFFF6A7D),
+                            sliderColor: const Color(0xFFE62940),
+                            borderRadius: BorderRadius.circular(30),
                             activeStyle: const TextStyle(
                               color: Colors.white,
                               fontFamily: 'Mulish',
@@ -195,175 +201,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       : 2;
 
                                   if (_explanations.every((e) => e.isEmpty)) {
-                                    final List<Map<String, dynamic>>
-                                    sections = [
-                                      {
-                                        "title": "Explain",
-                                        "icon": FluentIcons.book_24_filled,
-                                        "items": [
-                                          {
-                                            "label": "Explain Quantum Physics",
-                                            "prompt": "Explain Quantum Physics",
-                                          },
-                                          {
-                                            "label":
-                                                "What are wormholes explain like i am 5",
-                                            "prompt":
-                                                "What are wormholes explain like i am 5",
-                                          },
-                                        ],
-                                      },
-                                      {
-                                        "title": "Write & edit",
-                                        "icon": FluentIcons.edit_24_filled,
-                                        "items": [
-                                          {
-                                            "label":
-                                                "Write a tweet about global warming",
-                                            "prompt":
-                                                "Write a tweet about global warming",
-                                          },
-                                          {
-                                            "label":
-                                                "Write a poem about flowers",
-                                            "prompt":
-                                                "Write a poem about flowers",
-                                          },
-                                          {
-                                            "label": "Write a rap song",
-                                            "prompt": "Write a rap song",
-                                          },
-                                        ],
-                                      },
-                                      {
-                                        "title": "Translate",
-                                        "icon": FluentIcons.translate_24_filled,
-                                        "items": [
-                                          {
-                                            "label":
-                                                "How do you say “how are you” in Korean?",
-                                            "prompt":
-                                                "How do you say “how are you” in Korean?",
-                                          },
-                                          {
-                                            "label": "What’s hello in Chinese?",
-                                            "prompt":
-                                                "What’s hello in Chinese?",
-                                          },
-                                          {
-                                            "label": "Write a rap song",
-                                            "prompt": "Write a rap song",
-                                          },
-                                        ],
-                                      },
-                                    ];
-
-                                    return Expanded(
-                                      child: ListView.builder(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        itemCount: sections.length,
-                                        itemBuilder: (context, sectionIndex) {
-                                          final section =
-                                              sections[sectionIndex];
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 24.0,
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment
-                                                      .center, // Center the column
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .center, // Center icon & text together
-                                                  children: [
-                                                    Icon(
-                                                      section["icon"]
-                                                          as IconData,
-                                                      color: Colors.black87,
-                                                      size: 20,
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      section["title"]
-                                                          as String,
-                                                      style: GoogleFonts.mulish(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color: Color(
-                                                          0xff000000,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 12),
-                                                ...List.generate(
-                                                  (section["items"] as List)
-                                                      .length,
-                                                  (itemIndex) {
-                                                    final item =
-                                                        (section["items"]
-                                                            as List)[itemIndex];
-                                                    return GestureDetector(
-                                                      onTap: () {
-                                                        _searchController.text =
-                                                            item["prompt"]
-                                                                as String;
-                                                        _getExplanation();
-                                                      },
-                                                      child: Container(
-                                                        margin:
-                                                            const EdgeInsets.only(
-                                                              bottom: 10,
-                                                            ),
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              vertical: 14,
-                                                            ),
-                                                        width: double.infinity,
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.white,
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                30,
-                                                              ),
-                                                        ),
-                                                        child: Center(
-                                                          child: Text(
-                                                            item["label"]
-                                                                as String,
-                                                            style:
-                                                                GoogleFonts.mulish(
-                                                                  fontSize: 16,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w700,
-                                                                  color: Color(
-                                                                    0xffFF6A7D,
-                                                                  ),
-                                                                ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
+                                    return const Center(
+                                      child: AnimatedGradientText(
+                                        text: "Hey Awesome!",
                                       ),
                                     );
                                   }
 
-                                  return _buildExplanationText(
-                                    _explanations[index],
+                                  return ListView(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    children: [
+                                      _buildExplanationText(
+                                        _explanations[index],
+                                      ),
+                                    ],
                                   );
                                 },
                               ),
@@ -501,7 +354,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                               GestureDetector(
-                                onTap: _getExplanation,
+                                onTap: () {
+                                  _getExplanation();
+                                  _searchController.clear(); // Clear instantly
+                                },
                                 child: const Padding(
                                   padding: EdgeInsets.only(right: 16.0),
                                   child: Icon(
@@ -527,11 +383,79 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildExplanationText(String text) {
-    return SingleChildScrollView(
-      child: Text(
-        text.isEmpty ? "No explanation yet." : text,
-        style: const TextStyle(fontSize: 16, height: 1.4),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Explanation card
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              text.isEmpty ? "No explanation yet." : text,
+              style: GoogleFonts.mulish(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ),
+
+        // Action buttons outside the card
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                FluentIcons.copy_16_regular,
+                size: 18,
+                color: Color(0xFFFF5266),
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                if (text.isNotEmpty) {
+                  Clipboard.setData(ClipboardData(text: text));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Copied to clipboard')),
+                  );
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(
+                FluentIcons.history_16_filled,
+                size: 18,
+                color: Color(0xFFFF5266),
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                _getExplanation(); // Regenerate with current query
+              },
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(
+                FluentIcons.share_ios_20_filled,
+                size: 18,
+                color: Color(0xFFFF5266),
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () {
+                // Placeholder for more menu actions
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

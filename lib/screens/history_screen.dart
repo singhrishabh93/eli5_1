@@ -1,4 +1,6 @@
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HistoryScreen extends StatelessWidget {
   final List<Map<String, String>> historyItems = [
@@ -30,45 +32,56 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFFFFFFF),
+        elevation: 0,
         title: Text(
-          "History",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "Library",
+          style: GoogleFonts.mulish(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xffFF3951),
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {},
-        ),
+        actions: [
+          IconButton(
+            icon: const Icon(FluentIcons.add_16_filled, color: Color(0xffFF3951)),
+            onPressed: () {},
+          ),
+        ],
       ),
-      body: ListView.separated(
-        padding: EdgeInsets.symmetric(vertical: 10),
-        itemCount: historyItems.length,
-        separatorBuilder: (_, __) => SizedBox(height: 4),
-        itemBuilder: (context, index) {
-          final item = historyItems[index];
-          return ListTile(
-            leading: Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
+      body: Stack(
+        children: [
+          Image.asset("assets/bg.png",
+              fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          ListView.separated(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            itemCount: historyItems.length,
+            separatorBuilder: (_, __) => SizedBox(height: 4),
+            itemBuilder: (context, index) {
+            final item = historyItems[index];
+            return ListTile(
+              leading: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.history, color: Colors.black54),
               ),
-              child: Icon(Icons.history, color: Colors.black54),
-            ),
-            title: Text(
-              item["title"]!,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              item["subtitle"]!,
-              style: TextStyle(color: Colors.grey[600]),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
-        },
+              title: Text(
+                item["title"]!,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                item["subtitle"]!,
+                style: TextStyle(color: Colors.grey[600]),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          },
+        ),]
       )
     );
   }
