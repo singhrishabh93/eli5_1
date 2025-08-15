@@ -152,7 +152,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Positioned(top: 0, left: 0, right: 0, child: customAppBar()),
           Column(
             children: [
-              SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
+              SizedBox(
+                height: kToolbarHeight + MediaQuery.of(context).padding.top,
+              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -160,8 +162,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     children: [
                       // Show tab bar only if there is at least one response
                       if (_explanations.any((e) => e.isNotEmpty))
-                        SizedBox(
+                        Container(
                           height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.15),
+                              width: 1.2,
+                            ),
+                          ),
                           child: AdvancedSegment(
                             controller: _selectedSegment,
                             segments: const {
@@ -169,8 +179,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               'fifteen': "Like I’m 15",
                               'adult': "Like I’m an Adult",
                             },
-                            backgroundColor: const Color(0xFFFF6A7D),
-                            sliderColor: const Color(0xFFE62940),
+                            backgroundColor: Colors
+                                .transparent, // Transparent for glass effect
+                            sliderColor: Colors.white.withOpacity(
+                              0.2,
+                            ), // subtle slider
                             borderRadius: BorderRadius.circular(30),
                             activeStyle: const TextStyle(
                               color: Colors.white,
@@ -178,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               fontWeight: FontWeight.w600,
                             ),
                             inactiveStyle: const TextStyle(
-                              color: Colors.white,
+                              color: Colors.white70,
                               fontFamily: 'Mulish',
                               fontWeight: FontWeight.w500,
                             ),
@@ -412,28 +425,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Explanation card
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
+        Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.15),
+              width: 1.2,
+            ),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Text(
               text.isEmpty ? "No explanation yet." : text,
               style: GoogleFonts.mulish(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
-                color: Colors.black87,
+                color: Colors.white, // change to white for glass UI
                 height: 1.4,
               ),
             ),
           ),
         ),
 
-        // Action buttons outside the card
+        // Action buttons outside the glass card
         Row(
           children: [
             IconButton(
@@ -442,8 +458,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 size: 18,
                 color: Color(0xFFFF5266),
               ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
               onPressed: () {
                 if (text.isNotEmpty) {
                   Clipboard.setData(ClipboardData(text: text));
@@ -460,13 +474,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 size: 18,
                 color: Color(0xFFFF5266),
               ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
               onPressed: () {
-                _getExplanation(); // Regenerate with current query
+                _getExplanation();
               },
             ),
-            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(
                 FluentIcons.share_ios_20_filled,

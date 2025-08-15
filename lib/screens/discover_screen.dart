@@ -155,11 +155,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       ),
       body: Stack(
         children: [
-          Image.asset("assets/bg3.png",
-              fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Image.asset(
+            "assets/bg3.png",
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
           Column(
             children: [
-              SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
+              SizedBox(
+                height: kToolbarHeight + MediaQuery.of(context).padding.top,
+              ),
               SizedBox(
                 height: 48,
                 child: ListView.separated(
@@ -179,25 +185,36 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? Color(0xffFF3951)
-                              : Colors.white,
+                              ? Color(0xffFFA775) // selected pill transparency
+                              : Colors.white.withOpacity(
+                                  0.08,
+                                ), // unselected pill transparency
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: isSelected
-                                ? Colors.white
-                                : Color(0xffFF3951),
+                            color: Colors.white.withOpacity(
+                              0.25,
+                            ), // subtle border
+                            width: 1.2,
                           ),
+                          // Optional: shadow for slight elevation
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
                         child: Center(
                           child: Text(
                             category["label"]!,
                             style: GoogleFonts.mulish(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Color(0xffFF3951),
+                              color: Colors.white,
                               fontWeight: isSelected
                                   ? FontWeight.w700
                                   : FontWeight.w500,
@@ -216,14 +233,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(12),
-                        itemCount:
-                            articles.length + (isLoadingMore ? 1 : 0),
+                        itemCount: articles.length + (isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == articles.length) {
                             return const Padding(
                               padding: EdgeInsets.all(16),
-                              child: Center(
-                                  child: CircularProgressIndicator()),
+                              child: Center(child: CircularProgressIndicator()),
                             );
                           }
                           final article = articles[index];
@@ -232,74 +247,114 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFF3951),
-                                borderRadius: BorderRadius.circular(16),
+                                color: Colors.white.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.15),
+                                  width: 1.2,
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius:
-                                        const BorderRadius.only(
-                                      topLeft: Radius.circular(16),
-                                      topRight: Radius.circular(16),
-                                    ),
-                                    child: article["urlToImage"] != null
-                                        ? Image.network(
-                                            article["urlToImage"],
-                                            height: 200,
-                                            width: double.infinity,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Container(
-                                            height: 200,
-                                            color: Color(0xffFF5266),
-                                            child: const Center(
-                                              child: Icon(Icons.image,
-                                                  color: Colors.white),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Stack(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
                                             ),
                                           ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Text(
+                                          clipBehavior: Clip.hardEdge,
+                                          child: article["urlToImage"] != null
+                                              ? Image.network(
+                                                  article["urlToImage"],
+                                                  height: 180,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Container(
+                                                  height: 180,
+                                                  color: Colors.grey
+                                                      .withOpacity(0.3),
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.image,
+                                                      color: Colors.white70,
+                                                      size: 40,
+                                                    ),
+                                                  ),
+                                                ),
+                                        ),
+                                        Positioned(
+                                          top: 12,
+                                          right: 12,
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                article["isLiked"] =
+                                                    !(article["isLiked"] ??
+                                                        false);
+                                              });
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withOpacity(
+                                                  0.4,
+                                                ),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                article["isLiked"] == true
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color:
+                                                    article["isLiked"] == true
+                                                    ? Colors.red
+                                                    : Colors.white,
+                                                size: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
                                       article["title"] ?? "",
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.mulish(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
                                         color: Colors.white,
                                       ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
-                                    child: Row(
+                                    const SizedBox(height: 8),
+                                    Row(
                                       children: [
-                                        Icon(Icons.public,
-                                            size: 18,
-                                            color: Colors.grey[300]),
+                                        Icon(
+                                          Icons.public,
+                                          size: 16,
+                                          color: Colors.grey[300],
+                                        ),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
-                                            article["source"]["name"] ??
-                                                "",
+                                            article["source"]["name"] ?? "",
                                             style: GoogleFonts.mulish(
                                               fontSize: 14,
                                               color: Colors.grey[300],
                                             ),
                                           ),
                                         ),
-                                        IconButton(
-                                          icon: const Icon(
-                                              Icons.favorite_border,
-                                              color: Colors.white),
-                                          onPressed: () {},
-                                        ),
                                       ],
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -347,40 +402,49 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
-          top: 16,
-          left: 16,
-          right: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom),
+        top: 16,
+        left: 16,
+        right: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
           Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2))),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           const SizedBox(height: 12),
           if (widget.article["urlToImage"] != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(widget.article["urlToImage"],
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover),
+              child: Image.network(
+                widget.article["urlToImage"],
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
           const SizedBox(height: 12),
-          Text(widget.article["title"] ?? "",
-              style: GoogleFonts.mulish(
-                  fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(
+            widget.article["title"] ?? "",
+            style: GoogleFonts.mulish(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(widget.article["description"] ?? "",
-              style: GoogleFonts.mulish(
-                  fontSize: 14, color: Colors.black87)),
+          Text(
+            widget.article["description"] ?? "",
+            style: GoogleFonts.mulish(fontSize: 14, color: Colors.black87),
+          ),
           const SizedBox(height: 16),
 
           // "Explain Like I'm 5" Button
@@ -392,9 +456,9 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
               backgroundColor: const Color(0xFFFF3951),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
           ),
           const SizedBox(height: 16),
@@ -411,13 +475,15 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
               sliderColor: const Color(0xFFFF3951),
               borderRadius: BorderRadius.circular(8),
               activeStyle: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Mulish',
-                  fontWeight: FontWeight.w600),
+                color: Colors.white,
+                fontFamily: 'Mulish',
+                fontWeight: FontWeight.w600,
+              ),
               inactiveStyle: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Mulish',
-                  fontWeight: FontWeight.w500),
+                color: Colors.white,
+                fontFamily: 'Mulish',
+                fontWeight: FontWeight.w500,
+              ),
             ),
           const SizedBox(height: 8),
           Expanded(
@@ -429,15 +495,14 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                       int index = value == 'five'
                           ? 0
                           : value == 'fifteen'
-                              ? 1
-                              : 2;
+                          ? 1
+                          : 2;
                       return SingleChildScrollView(
                         child: Text(
                           _explanations[index].isEmpty
                               ? "No explanation yet."
                               : _explanations[index],
-                          style: const TextStyle(
-                              fontSize: 16, height: 1.4),
+                          style: const TextStyle(fontSize: 16, height: 1.4),
                         ),
                       );
                     },
