@@ -129,14 +129,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFFFF),
+        backgroundColor: const Color(0xFF000000),
         elevation: 0,
         title: Text(
           "Discover",
           style: GoogleFonts.mulish(
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            color: Color(0xffFF3951),
+            color: Color(0xffFFFFFF),
           ),
         ),
         centerTitle: true,
@@ -144,7 +144,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           IconButton(
             icon: const Icon(
               FluentIcons.heart_12_filled,
-              color: Color(0xffFF3951),
+              color: Color(0xffFFFFFF),
             ),
             onPressed: () {},
           ),
@@ -152,7 +152,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       ),
       body: Stack(
         children: [
-          Image.asset("assets/bg.png",
+          Image.asset("assets/bg3.png",
               fit: BoxFit.cover, width: double.infinity, height: double.infinity),
           Column(
             children: [
