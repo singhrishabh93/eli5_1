@@ -25,8 +25,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
   bool _showHighlights = false;
 
-  /// ✅ Store messages with multiple versions for AI
-  List<Map<String, String>> _homeMessages = []; 
+  /// ✅ Store all messages persistently
+  List<Map<String, String>> _homeMessages = [];
   bool _isLoading = false;
 
   late AnimationController _gradientController;
@@ -109,16 +109,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  /// ✅ Modified to fetch 3 responses
+  /// ✅ Modified to keep old messages and append new response
   Future<void> _getExplanation() async {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _homeMessages.add({"role": "user", "message": query});
+    });
 
     try {
-      _homeMessages.add({"role": "user", "message": query});
-
       /// ✅ Fetch 3 responses like old logic
       final results = await _geminiService.fetchExplanations(query);
       // results[0] => Like I'm 5, results[1] => Like I'm 15, results[2] => Like I'm an Adult
@@ -130,7 +131,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           "message_fifteen": results[1],
           "message_adult": results[2],
         });
-        _searchController.clear();
       });
     } catch (e) {
       setState(() {
@@ -142,7 +142,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         });
       });
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _searchController.clear();
+      });
     }
   }
 
@@ -214,69 +217,74 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : (_homeMessages.isEmpty
-                          ? const Center(child: AnimatedGradientText(text: "Hey Awesome!"))
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: _homeMessages.length,
-                              itemBuilder: (context, index) {
-                                final msg = _homeMessages[index];
-                                final isUser = msg["role"] == "user";
+                  child: (_homeMessages.isEmpty && !_isLoading)
+                      ? const Center(child: AnimatedGradientText(text: "Hey Awesome!"))
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: _homeMessages.length + (_isLoading ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (_isLoading && index == _homeMessages.length) {
+                              return const Center(child: Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: CircularProgressIndicator(),
+                              ));
+                            }
 
-                                String aiText = "";
-                                if (!isUser) {
-                                  aiText = _selectedSegment.value == 'five'
-                                      ? msg["message_five"] ?? ""
-                                      : _selectedSegment.value == 'fifteen'
-                                          ? msg["message_fifteen"] ?? ""
-                                          : msg["message_adult"] ?? "";
-                                } else {
-                                  aiText = msg["message"] ?? "";
-                                }
+                            final msg = _homeMessages[index];
+                            final isUser = msg["role"] == "user";
 
-                                return Column(
-                                  crossAxisAlignment: isUser
-                                      ? CrossAxisAlignment.end
-                                      : CrossAxisAlignment.start,
-                                  children: [
-                                    Align(
-                                      alignment: isUser
-                                          ? Alignment.centerRight
-                                          : Alignment.centerLeft,
-                                      child: Container(
-                                        margin: const EdgeInsets.symmetric(vertical: 6),
-                                        padding: const EdgeInsets.all(14),
-                                        constraints: BoxConstraints(
-                                          maxWidth: MediaQuery.of(context).size.width * 0.7,
+                            String aiText = "";
+                            if (!isUser) {
+                              aiText = _selectedSegment.value == 'five'
+                                  ? msg["message_five"] ?? ""
+                                  : _selectedSegment.value == 'fifteen'
+                                      ? msg["message_fifteen"] ?? ""
+                                      : msg["message_adult"] ?? "";
+                            } else {
+                              aiText = msg["message"] ?? "";
+                            }
+
+                            return Column(
+                              crossAxisAlignment: isUser
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                Align(
+                                  alignment: isUser
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(vertical: 6),
+                                    padding: const EdgeInsets.all(14),
+                                    constraints: BoxConstraints(
+                                      maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isUser
+                                          ? const Color(0xFFFFA775)
+                                          : Colors.white.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: MarkdownBody(
+                                      data: aiText,
+                                      styleSheet: MarkdownStyleSheet(
+                                        p: GoogleFonts.mulish(
+                                          color: Colors.white,
+                                          fontSize: 14,
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: isUser
-                                              ? const Color(0xFFFFA775)
-                                              : Colors.white.withOpacity(0.08),
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        child: MarkdownBody(
-                                          data: aiText,
-                                          styleSheet: MarkdownStyleSheet(
-                                            p: GoogleFonts.mulish(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                            ),
-                                            strong: GoogleFonts.mulish(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
+                                        strong: GoogleFonts.mulish(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
-                                    if (!isUser) _buildActionRow(aiText),
-                                  ],
-                                );
-                              },
-                            )),
+                                  ),
+                                ),
+                                if (!isUser) _buildActionRow(aiText),
+                              ],
+                            );
+                          },
+                        ),
                 ),
               ),
 
@@ -388,7 +396,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               GestureDetector(
                                 onTap: () {
                                   _getExplanation();
-                                  _searchController.clear();
                                 },
                                 child: const Padding(
                                   padding: EdgeInsets.only(right: 16.0),
