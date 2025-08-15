@@ -97,52 +97,58 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true, // ✅ This is important
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFFFF),
+        backgroundColor: Colors.black.withOpacity(0), // ✅ Fully transparent
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent, // ✅ Prevent Material overlay tint
         title: Text(
           "Knowledge",
           style: GoogleFonts.mulish(
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            color: const Color(0xffFF3951),
+            color: const Color(0xffFFFFFF),
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite, color: Color(0xffFF3951)),
+            icon: const Icon(Icons.favorite, color: Color(0xffFFFFFF)),
             onPressed: () {},
           ),
         ],
       ),
       body: Stack(
         children: [
-          Image.asset("assets/bg.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-          ListView(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            children: [
-              _buildSectionTitle("Fun Science Facts"),
-              isLoadingFacts
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildHorizontalCards(funScienceFacts, isNeon: true),
-
-              _buildSectionTitle("Today in History"),
-              isLoadingHistory
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildGradientCards(todayInHistory),
-
-              _buildSectionTitle("Inventions & Discoveries"),
-              _buildHorizontalImageCards(inventions),
-
-              _buildSectionTitle("Unusual Words & Phrases"),
-              _buildWordCards(unusualWords),
-
-              _buildSectionTitle("Random Questions"),
-              _buildHorizontalCards(
-                randomQuestions.map((q) => {"fact": q}).toList(),
-              ),
-            ],
+          Image.asset("assets/bg3.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Padding(
+            padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.of(context).padding.top),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              children: [
+                _buildSectionTitle("Fun Science Facts"),
+                isLoadingFacts
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildHorizontalCards(funScienceFacts, isNeon: true),
+            
+                _buildSectionTitle("Today in History"),
+                isLoadingHistory
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildGradientCards(todayInHistory),
+            
+                _buildSectionTitle("Inventions & Discoveries"),
+                _buildHorizontalImageCards(inventions),
+            
+                _buildSectionTitle("Unusual Words & Phrases"),
+                _buildWordCards(unusualWords),
+            
+                _buildSectionTitle("Random Questions"),
+                _buildHorizontalCards(
+                  randomQuestions.map((q) => {"fact": q}).toList(),
+                ),
+              ],
+            ),
           ),
         ],
       ),

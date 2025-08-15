@@ -128,9 +128,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true, // ✅ This is important
       appBar: AppBar(
-        backgroundColor: const Color(0xFF000000),
+        backgroundColor: Colors.black.withOpacity(0), // ✅ Fully transparent
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent, // ✅ Prevent Material overlay tint
         title: Text(
           "Discover",
           style: GoogleFonts.mulish(
@@ -156,6 +159,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               fit: BoxFit.cover, width: double.infinity, height: double.infinity),
           Column(
             children: [
+              SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
               SizedBox(
                 height: 48,
                 child: ListView.separated(

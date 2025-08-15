@@ -31,57 +31,63 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true, // ✅ This is important
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFFFF),
+        backgroundColor: Colors.black.withOpacity(0), // ✅ Fully transparent
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent, // ✅ Prevent Material overlay tint
         title: Text(
           "Library",
           style: GoogleFonts.mulish(
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            color: const Color(0xffFF3951),
+            color: const Color(0xffFFFFFF),
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(FluentIcons.add_16_filled, color: Color(0xffFF3951)),
+            icon: const Icon(FluentIcons.add_16_filled, color: Color(0xffFFFFFF)),
             onPressed: () {},
           ),
         ],
       ),
       body: Stack(
         children: [
-          Image.asset("assets/bg.png",
+          Image.asset("assets/bg2.png",
               fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-          ListView.separated(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            itemCount: historyItems.length,
-            separatorBuilder: (_, __) => SizedBox(height: 4),
-            itemBuilder: (context, index) {
-            final item = historyItems[index];
-            return ListTile(
-              leading: Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(8),
+          Padding(
+            padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.of(context).padding.top),
+            child: ListView.separated(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              itemCount: historyItems.length,
+              separatorBuilder: (_, __) => SizedBox(height: 4),
+              itemBuilder: (context, index) {
+              final item = historyItems[index];
+              return ListTile(
+                leading: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.history, color: Colors.black54),
                 ),
-                child: Icon(Icons.history, color: Colors.black54),
-              ),
-              title: Text(
-                item["title"]!,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                item["subtitle"]!,
-                style: TextStyle(color: Colors.grey[600]),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            );
-          },
-        ),]
+                title: Text(
+                  item["title"]!,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  item["subtitle"]!,
+                  style: TextStyle(color: Colors.grey[600]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            },
+                    ),
+          ),]
       )
     );
   }
