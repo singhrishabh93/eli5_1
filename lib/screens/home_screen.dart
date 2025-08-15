@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:eli5/widgets/animated_text.dart';
 import 'package:eli5/widgets/appbar.dart';
 import 'package:eli5/widgets/chat_modal.dart';
+import 'package:eli5/widgets/highlights_widget.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -73,18 +74,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _currentTextOffsetAnimation =
         Tween<Offset>(begin: Offset.zero, end: const Offset(0, -1.5)).animate(
-          CurvedAnimation(parent: _textAnimController, curve: Curves.easeOutCubic),
+          CurvedAnimation(
+            parent: _textAnimController,
+            curve: Curves.easeOutCubic,
+          ),
         );
 
     _nextTextOffsetAnimation =
         Tween<Offset>(begin: const Offset(0, 1.5), end: Offset.zero).animate(
-          CurvedAnimation(parent: _textAnimController, curve: Curves.easeOutCubic),
+          CurvedAnimation(
+            parent: _textAnimController,
+            curve: Curves.easeOutCubic,
+          ),
         );
 
     _suggestionTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (!_isUserTyping) {
         setState(() {
-          _nextSuggestionIndex = (_currentSuggestionIndex + 1) % _wearSuggestions.length;
+          _nextSuggestionIndex =
+              (_currentSuggestionIndex + 1) % _wearSuggestions.length;
         });
         _textAnimController.reset();
         _textAnimController.forward();
@@ -176,18 +184,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Positioned(top: 0, left: 0, right: 0, child: customAppBar()),
           Column(
             children: [
-              SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
+              SizedBox(
+                height: kToolbarHeight + MediaQuery.of(context).padding.top,
+              ),
 
               /// ✅ Show tabs only if there is at least one AI message
               if (_homeMessages.any((msg) => msg["role"] == "ai"))
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.2),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.15),
+                        width: 1.2,
+                      ),
                     ),
                     child: AdvancedSegment(
                       controller: _selectedSegment,
@@ -209,7 +225,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         fontFamily: 'Mulish',
                         fontWeight: FontWeight.w500,
                       ),
-                      itemPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      itemPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -217,17 +236,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: (_homeMessages.isEmpty && !_isLoading)
-                      ? const Center(child: AnimatedGradientText(text: "Hey Awesome!"))
+                  child: _showHighlights
+                      ? HighlightsWidget(
+                          onCardTap: (query) {
+                            setState(() {
+                              _searchController.text = query;
+                              _showHighlights =
+                                  false; // hide highlights after selection
+                            });
+                            _getExplanation();
+                          },
+                        )
+                      : (_homeMessages.isEmpty && !_isLoading)
+                      ? const Center(
+                          child: AnimatedGradientText(text: "Hey Awesome!"),
+                        )
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: _homeMessages.length + (_isLoading ? 1 : 0),
+                          itemCount:
+                              _homeMessages.length + (_isLoading ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (_isLoading && index == _homeMessages.length) {
-                              return const Center(child: Padding(
-                                padding: EdgeInsets.all(12.0),
-                                child: CircularProgressIndicator(),
-                              ));
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
                             }
 
                             final msg = _homeMessages[index];
@@ -238,8 +273,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               aiText = _selectedSegment.value == 'five'
                                   ? msg["message_five"] ?? ""
                                   : _selectedSegment.value == 'fifteen'
-                                      ? msg["message_fifteen"] ?? ""
-                                      : msg["message_adult"] ?? "";
+                                  ? msg["message_fifteen"] ?? ""
+                                  : msg["message_adult"] ?? "";
                             } else {
                               aiText = msg["message"] ?? "";
                             }
@@ -254,10 +289,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ? Alignment.centerRight
                                       : Alignment.centerLeft,
                                   child: Container(
-                                    margin: const EdgeInsets.symmetric(vertical: 6),
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
                                     padding: const EdgeInsets.all(14),
                                     constraints: BoxConstraints(
-                                      maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                      maxWidth:
+                                          MediaQuery.of(context).size.width *
+                                          0.7,
                                     ),
                                     decoration: BoxDecoration(
                                       color: isUser
@@ -299,11 +338,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(30),
                         gradient: LinearGradient(
-                          colors: [const Color(0xFFFFA775), const Color(0xFFF0CF7B)],
+                          colors: [
+                            const Color(0xFFFFA775),
+                            const Color(0xFFF0CF7B),
+                          ],
                           stops: [0, 1.0],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
-                          transform: GradientRotation(_gradientController.value * 6.28),
+                          transform: GradientRotation(
+                            _gradientController.value * 6.28,
+                          ),
                         ),
                       ),
                       child: Padding(
@@ -316,14 +360,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: Row(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                                padding: const EdgeInsets.only(
+                                  left: 16.0,
+                                  right: 8.0,
+                                ),
                                 child: GestureDetector(
                                   onTap: () {
                                     setState(() {
                                       _showHighlights = !_showHighlights;
                                     });
                                   },
-                                  child: Image.asset("assets/icons/star.png", height: 20, width: 20),
+                                  child: Image.asset(
+                                    "assets/icons/star.png",
+                                    height: 20,
+                                    width: 20,
+                                  ),
                                 ),
                               ),
                               Expanded(
@@ -342,31 +393,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 child: Stack(
                                                   children: [
                                                     SlideTransition(
-                                                      position: _currentTextOffsetAnimation,
+                                                      position:
+                                                          _currentTextOffsetAnimation,
                                                       child: Align(
-                                                        alignment: Alignment.centerLeft,
+                                                        alignment: Alignment
+                                                            .centerLeft,
                                                         child: Text(
                                                           " ${_wearSuggestions[_currentSuggestionIndex]}",
-                                                          style: GoogleFonts.mulish(
-                                                            color: Colors.white,
-                                                            fontSize: 16,
-                                                            fontStyle: FontStyle.italic,
-                                                          ),
+                                                          style:
+                                                              GoogleFonts.mulish(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 16,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                              ),
                                                         ),
                                                       ),
                                                     ),
                                                     SlideTransition(
-                                                      position: _nextTextOffsetAnimation,
+                                                      position:
+                                                          _nextTextOffsetAnimation,
                                                       child: Align(
-                                                        alignment: Alignment.centerLeft,
+                                                        alignment: Alignment
+                                                            .centerLeft,
                                                         child: Text(
                                                           " ${_wearSuggestions[_nextSuggestionIndex]}",
-                                                          style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 16,
-                                                            fontFamily: "SatoshiR",
-                                                            fontStyle: FontStyle.italic,
-                                                          ),
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 16,
+                                                                fontFamily:
+                                                                    "SatoshiR",
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                              ),
                                                         ),
                                                       ),
                                                     ),
@@ -380,7 +444,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     TextField(
                                       controller: _searchController,
                                       decoration: const InputDecoration(
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 0),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 0,
+                                        ),
                                         border: InputBorder.none,
                                         hintStyle: TextStyle(
                                           color: Colors.white,
@@ -399,7 +465,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 },
                                 child: const Padding(
                                   padding: EdgeInsets.only(right: 16.0),
-                                  child: Icon(Icons.search, color: Color(0xFFF0CF7B), size: 24),
+                                  child: Icon(
+                                    Icons.search,
+                                    color: Color(0xFFF0CF7B),
+                                    size: 24,
+                                  ),
                                 ),
                               ),
                             ],
@@ -422,7 +492,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(FluentIcons.copy_16_regular, size: 18, color: Color(0xFFFFA775)),
+          icon: const Icon(
+            FluentIcons.copy_16_regular,
+            size: 18,
+            color: Color(0xFFFFA775),
+          ),
           onPressed: () {
             if (text.isNotEmpty) {
               Clipboard.setData(ClipboardData(text: text));
@@ -433,11 +507,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           },
         ),
         IconButton(
-          icon: const Icon(FluentIcons.history_16_filled, size: 18, color: Color(0xFFFFA775)),
+          icon: const Icon(
+            FluentIcons.history_16_filled,
+            size: 18,
+            color: Color(0xFFFFA775),
+          ),
           onPressed: _getExplanation,
         ),
         IconButton(
-          icon: const Icon(FluentIcons.share_ios_20_filled, size: 18, color: Color(0xFFFFA775)),
+          icon: const Icon(
+            FluentIcons.share_ios_20_filled,
+            size: 18,
+            color: Color(0xFFFFA775),
+          ),
           onPressed: () {
             // Implement Share functionality
           },
@@ -452,16 +534,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.2),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1.2,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset("assets/icons/star.png", height: 18, width: 18, color: Colors.orange),
+                  Image.asset(
+                    "assets/icons/star.png",
+                    height: 18,
+                    width: 18,
+                    color: Colors.orange,
+                  ),
                   const SizedBox(width: 8),
                   const Text(
                     "Ask",
-                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
