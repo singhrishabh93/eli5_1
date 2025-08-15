@@ -138,16 +138,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _openChatModal({String? initialMessage}) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => ChatModal(
-      geminiService: _geminiService,
-      initialMessage: initialMessage,
-    ),
-  );
-}
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ChatModal(
+        geminiService: _geminiService,
+        initialMessage: initialMessage,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               'adult': "Like I’m an Adult",
                             },
                             backgroundColor: Colors.transparent,
-                            sliderColor: Colors.white.withOpacity(0.2),
+                            sliderColor: Colors.yellowAccent.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(30),
                             activeStyle: const TextStyle(
                               color: Colors.white,
@@ -257,20 +257,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                   _explanations[index],
                                                 ),
                                               ],
-                                            ),
-                                            Positioned(
-                                              bottom: 16,
-                                              right: 16,
-                                              child: FloatingActionButton(
-                                                onPressed: _openChatModal,
-                                                backgroundColor: const Color(
-                                                  0xFFFF5266,
-                                                ),
-                                                child: const Icon(
-                                                  FluentIcons.chat_16_filled,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
                                             ),
                                           ],
                                         );
@@ -475,7 +461,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               icon: const Icon(
                 FluentIcons.copy_16_regular,
                 size: 18,
-                color: Color(0xFFFF5266),
+                color: Color(0xFFFFA775),
               ),
               onPressed: () {
                 if (text.isNotEmpty) {
@@ -490,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               icon: const Icon(
                 FluentIcons.history_16_filled,
                 size: 18,
-                color: Color(0xFFFF5266),
+                color: Color(0xFFFFA775),
               ),
               onPressed: () {
                 _getExplanation();
@@ -500,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               icon: const Icon(
                 FluentIcons.share_ios_20_filled,
                 size: 18,
-                color: Color(0xFFFF5266),
+                color: Color(0xFFFFA775),
               ),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -511,29 +497,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(width: 8),
             // New Chat Button
             SizedBox(
-              height: 36,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFA775),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFA775),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              height: 40,
+              child: GestureDetector(
+                onTap: () {
+                  _openChatModal(initialMessage: text);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(
+                      0.08,
+                    ), // translucent background
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.15),
+                      width: 1.2,
                     ),
                   ),
-                  onPressed: () {
-                    _openChatModal(initialMessage: text);
-                  },
-                  child: const Text(
-                    'Chat',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        "assets/icons/star.png", // your asset icon
+                        height: 18,
+                        width: 18,
+                        color: Colors.orange, // optional, to match the theme
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Ask",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

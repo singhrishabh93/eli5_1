@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_markdown/flutter_markdown.dart'; // for bold formatting
 import '../services/openai_service.dart';
 
 class ChatModal extends StatefulWidget {
   final GeminiService geminiService;
-  final String? initialMessage; // Add this
+  final String? initialMessage;
 
   const ChatModal({
     Key? key,
@@ -24,10 +25,9 @@ class _ChatModalState extends State<ChatModal> {
   @override
   void initState() {
     super.initState();
-    // Add initial AI message if provided
     if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
       _messages.add({"role": "ai", "message": widget.initialMessage!});
-      widget.geminiService.addAIMessage(widget.initialMessage!); // Add to history
+      widget.geminiService.addAIMessage(widget.initialMessage!);
     }
   }
 
@@ -66,7 +66,7 @@ class _ChatModalState extends State<ChatModal> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withOpacity(0.95),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
@@ -95,17 +95,24 @@ class _ChatModalState extends State<ChatModal> {
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         padding: const EdgeInsets.all(12),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
                         decoration: BoxDecoration(
                           color: isUser
-                              ? const Color(0xFFFF5266)
-                              : Colors.white.withOpacity(0.1),
+                              ? const Color(0xFFFFA775) // ✅ User bubble
+                              : Colors.white.withOpacity(0.08), // ✅ AI bubble
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Text(
-                          msg["message"]!,
-                          style: GoogleFonts.mulish(
-                            color: Colors.white,
-                            fontSize: 14,
+                        child: MarkdownBody(
+                          data: msg["message"]!,
+                          styleSheet: MarkdownStyleSheet(
+                            p: GoogleFonts.mulish(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                            strong: GoogleFonts.mulish(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -116,7 +123,7 @@ class _ChatModalState extends State<ChatModal> {
               if (_isLoading)
                 const Padding(
                   padding: EdgeInsets.all(8),
-                  child: CircularProgressIndicator(color: Color(0xFFFF5266)),
+                  child: CircularProgressIndicator(color: Color(0xFFFFA775)),
                 ),
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -131,16 +138,20 @@ class _ChatModalState extends State<ChatModal> {
                   ),
                   child: Row(
                     children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Icon(Icons.camera_alt, color: Colors.white54),
+                      ),
                       Expanded(
                         child: TextField(
                           controller: _chatController,
                           style: const TextStyle(color: Colors.white),
                           decoration: const InputDecoration(
-                            hintText: "Ask something...",
+                            hintText: "Message",
                             hintStyle: TextStyle(color: Colors.white54),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
+                              horizontal: 8,
                               vertical: 14,
                             ),
                           ),
