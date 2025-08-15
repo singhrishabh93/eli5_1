@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:eli5/widgets/animated_text.dart';
 import 'package:eli5/widgets/appbar.dart';
+import 'package:eli5/widgets/chat_modal.dart';
 import 'package:eli5/widgets/highlights_widget.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _selectedSegment = ValueNotifier<String>('five');
   final _searchController = TextEditingController();
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
-  bool _showHighlights = false; // Toggle to show highlights or explanations
+  bool _showHighlights = false;
 
   List<String> _explanations = ["", "", ""];
   bool _isLoading = false;
@@ -124,17 +125,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final results = await _geminiService.fetchExplanations(query);
       setState(() {
         _explanations = results;
-        _searchController.clear(); // ⬅ Clear search bar after search
+        _searchController.clear();
       });
     } catch (e) {
       setState(() {
         _explanations = ["Error: $e", "", ""];
-        _searchController.clear(); // ⬅ Also clear if there's an error
+        _searchController.clear();
       });
     } finally {
       setState(() => _isLoading = false);
     }
   }
+
+  void _openChatModal({String? initialMessage}) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => ChatModal(
+      geminiService: _geminiService,
+      initialMessage: initialMessage,
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +173,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      // Show tab bar only if there is at least one response
                       if (_explanations.any((e) => e.isNotEmpty))
                         Container(
                           height: 60,
@@ -179,11 +191,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               'fifteen': "Like I’m 15",
                               'adult': "Like I’m an Adult",
                             },
-                            backgroundColor: Colors
-                                .transparent, // Transparent for glass effect
-                            sliderColor: Colors.white.withOpacity(
-                              0.2,
-                            ), // subtle slider
+                            backgroundColor: Colors.transparent,
+                            sliderColor: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(30),
                             activeStyle: const TextStyle(
                               color: Colors.white,
@@ -201,7 +210,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                         ),
-
                       if (_explanations.any((e) => e.isNotEmpty))
                         const SizedBox(height: 12),
 
@@ -228,8 +236,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             : value == 'fifteen'
                                             ? 1
                                             : 2;
-
-                                        // If no explanations, show "Hey Awesome!"
                                         if (_explanations.every(
                                           (e) => e.isEmpty,
                                         )) {
@@ -239,14 +245,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             ),
                                           );
                                         }
-
-                                        return ListView(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
+                                        return Stack(
                                           children: [
-                                            _buildExplanationText(
-                                              _explanations[index],
+                                            ListView(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 8,
+                                                  ),
+                                              children: [
+                                                _buildExplanationText(
+                                                  _explanations[index],
+                                                ),
+                                              ],
+                                            ),
+                                            Positioned(
+                                              bottom: 16,
+                                              right: 16,
+                                              child: FloatingActionButton(
+                                                onPressed: _openChatModal,
+                                                backgroundColor: const Color(
+                                                  0xFFFF5266,
+                                                ),
+                                                child: const Icon(
+                                                  FluentIcons.chat_16_filled,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         );
@@ -258,7 +282,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
-              // Search bar
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: AnimatedBuilder(
@@ -298,11 +321,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 child: GestureDetector(
                                   onTap: () {
                                     setState(() {
-                                      _showHighlights =
-                                          !_showHighlights; // toggle instead of always true
+                                      _showHighlights = !_showHighlights;
                                     });
                                   },
-
                                   child: Image.asset(
                                     "assets/icons/star.png",
                                     height: 20,
@@ -395,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               GestureDetector(
                                 onTap: () {
                                   _getExplanation();
-                                  _searchController.clear(); // Clear instantly
+                                  _searchController.clear();
                                 },
                                 child: const Padding(
                                   padding: EdgeInsets.only(right: 16.0),
@@ -442,14 +463,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               style: GoogleFonts.mulish(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
-                color: Colors.white, // change to white for glass UI
+                color: Colors.white,
                 height: 1.4,
               ),
             ),
           ),
         ),
-
-        // Action buttons outside the glass card
         Row(
           children: [
             IconButton(
@@ -467,7 +486,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 }
               },
             ),
-            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(
                 FluentIcons.history_16_filled,
@@ -487,8 +505,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
               onPressed: () {
-                // Placeholder for more menu actions
+                // Share functionality
               },
+            ),
+            const SizedBox(width: 8),
+            // New Chat Button
+            SizedBox(
+              height: 36,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFA775),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFA775),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    _openChatModal(initialMessage: text);
+                  },
+                  child: const Text(
+                    'Chat',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
