@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:eli5/widgets/animated_text.dart';
 import 'package:eli5/widgets/appbar.dart';
 import 'package:eli5/widgets/chat_modal.dart';
-import 'package:eli5/widgets/highlights_widget.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/openai_service.dart';
 
@@ -25,7 +25,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
   bool _showHighlights = false;
 
-  List<String> _explanations = ["", "", ""];
+  /// ✅ Store messages with multiple versions for AI
+  List<Map<String, String>> _homeMessages = []; 
   bool _isLoading = false;
 
   late AnimationController _gradientController;
@@ -72,25 +73,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _currentTextOffsetAnimation =
         Tween<Offset>(begin: Offset.zero, end: const Offset(0, -1.5)).animate(
-          CurvedAnimation(
-            parent: _textAnimController,
-            curve: Curves.easeOutCubic,
-          ),
+          CurvedAnimation(parent: _textAnimController, curve: Curves.easeOutCubic),
         );
 
     _nextTextOffsetAnimation =
         Tween<Offset>(begin: const Offset(0, 1.5), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _textAnimController,
-            curve: Curves.easeOutCubic,
-          ),
+          CurvedAnimation(parent: _textAnimController, curve: Curves.easeOutCubic),
         );
 
     _suggestionTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (!_isUserTyping) {
         setState(() {
-          _nextSuggestionIndex =
-              (_currentSuggestionIndex + 1) % _wearSuggestions.length;
+          _nextSuggestionIndex = (_currentSuggestionIndex + 1) % _wearSuggestions.length;
         });
         _textAnimController.reset();
         _textAnimController.forward();
@@ -115,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  /// ✅ Modified to fetch 3 responses
   Future<void> _getExplanation() async {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
@@ -122,15 +117,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() => _isLoading = true);
 
     try {
+      _homeMessages.add({"role": "user", "message": query});
+
+      /// ✅ Fetch 3 responses like old logic
       final results = await _geminiService.fetchExplanations(query);
+      // results[0] => Like I'm 5, results[1] => Like I'm 15, results[2] => Like I'm an Adult
+
       setState(() {
-        _explanations = results;
+        _homeMessages.add({
+          "role": "ai",
+          "message_five": results[0],
+          "message_fifteen": results[1],
+          "message_adult": results[2],
+        });
         _searchController.clear();
       });
     } catch (e) {
       setState(() {
-        _explanations = ["Error: $e", "", ""];
-        _searchController.clear();
+        _homeMessages.add({
+          "role": "ai",
+          "message_five": "Error: $e",
+          "message_fifteen": "",
+          "message_adult": "",
+        });
       });
     } finally {
       setState(() => _isLoading = false);
@@ -161,113 +170,117 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             width: double.infinity,
             height: double.infinity,
           ),
-
           Positioned(top: 0, left: 0, right: 0, child: customAppBar()),
           Column(
             children: [
-              SizedBox(
-                height: kToolbarHeight + MediaQuery.of(context).padding.top,
-              ),
+              SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
+
+              /// ✅ Show tabs only if there is at least one AI message
+              if (_homeMessages.any((msg) => msg["role"] == "ai"))
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.2),
+                    ),
+                    child: AdvancedSegment(
+                      controller: _selectedSegment,
+                      segments: const {
+                        'five': "Like I’m 5",
+                        'fifteen': "Like I’m 15",
+                        'adult': "Like I’m an Adult",
+                      },
+                      backgroundColor: Colors.transparent,
+                      sliderColor: Colors.yellowAccent.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(30),
+                      activeStyle: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'Mulish',
+                        fontWeight: FontWeight.w600,
+                      ),
+                      inactiveStyle: const TextStyle(
+                        color: Colors.white70,
+                        fontFamily: 'Mulish',
+                        fontWeight: FontWeight.w500,
+                      ),
+                      itemPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    ),
+                  ),
+                ),
+
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      if (_explanations.any((e) => e.isNotEmpty))
-                        Container(
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.15),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: AdvancedSegment(
-                            controller: _selectedSegment,
-                            segments: const {
-                              'five': "Like I’m 5",
-                              'fifteen': "Like I’m 15",
-                              'adult': "Like I’m an Adult",
-                            },
-                            backgroundColor: Colors.transparent,
-                            sliderColor: Colors.yellowAccent.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(30),
-                            activeStyle: const TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'Mulish',
-                              fontWeight: FontWeight.w600,
-                            ),
-                            inactiveStyle: const TextStyle(
-                              color: Colors.white70,
-                              fontFamily: 'Mulish',
-                              fontWeight: FontWeight.w500,
-                            ),
-                            itemPadding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 12,
-                            ),
-                          ),
-                        ),
-                      if (_explanations.any((e) => e.isNotEmpty))
-                        const SizedBox(height: 12),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : (_homeMessages.isEmpty
+                          ? const Center(child: AnimatedGradientText(text: "Hey Awesome!"))
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: _homeMessages.length,
+                              itemBuilder: (context, index) {
+                                final msg = _homeMessages[index];
+                                final isUser = msg["role"] == "user";
 
-                      Expanded(
-                        child: _showHighlights
-                            ? HighlightsWidget(
-                                onCardTap: (query) {
-                                  setState(() {
-                                    _searchController.text = query;
-                                    _showHighlights = false;
-                                  });
-                                  _getExplanation();
-                                },
-                              )
-                            : (_isLoading
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : ValueListenableBuilder<String>(
-                                      valueListenable: _selectedSegment,
-                                      builder: (context, value, _) {
-                                        int index = value == 'five'
-                                            ? 0
-                                            : value == 'fifteen'
-                                            ? 1
-                                            : 2;
-                                        if (_explanations.every(
-                                          (e) => e.isEmpty,
-                                        )) {
-                                          return const Center(
-                                            child: AnimatedGradientText(
-                                              text: "Hey Awesome!",
+                                String aiText = "";
+                                if (!isUser) {
+                                  aiText = _selectedSegment.value == 'five'
+                                      ? msg["message_five"] ?? ""
+                                      : _selectedSegment.value == 'fifteen'
+                                          ? msg["message_fifteen"] ?? ""
+                                          : msg["message_adult"] ?? "";
+                                } else {
+                                  aiText = msg["message"] ?? "";
+                                }
+
+                                return Column(
+                                  crossAxisAlignment: isUser
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                                  children: [
+                                    Align(
+                                      alignment: isUser
+                                          ? Alignment.centerRight
+                                          : Alignment.centerLeft,
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(vertical: 6),
+                                        padding: const EdgeInsets.all(14),
+                                        constraints: BoxConstraints(
+                                          maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isUser
+                                              ? const Color(0xFFFFA775)
+                                              : Colors.white.withOpacity(0.08),
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: MarkdownBody(
+                                          data: aiText,
+                                          styleSheet: MarkdownStyleSheet(
+                                            p: GoogleFonts.mulish(
+                                              color: Colors.white,
+                                              fontSize: 14,
                                             ),
-                                          );
-                                        }
-                                        return Stack(
-                                          children: [
-                                            ListView(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 8,
-                                                  ),
-                                              children: [
-                                                _buildExplanationText(
-                                                  _explanations[index],
-                                                ),
-                                              ],
+                                            strong: GoogleFonts.mulish(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
                                             ),
-                                          ],
-                                        );
-                                      },
-                                    )),
-                      ),
-                    ],
-                  ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (!isUser) _buildActionRow(aiText),
+                                  ],
+                                );
+                              },
+                            )),
                 ),
               ),
 
+              /// ✅ Input Bar
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: AnimatedBuilder(
@@ -278,16 +291,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(30),
                         gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFFFFA775),
-                            const Color(0xFFF0CF7B),
-                          ],
+                          colors: [const Color(0xFFFFA775), const Color(0xFFF0CF7B)],
                           stops: [0, 1.0],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
-                          transform: GradientRotation(
-                            _gradientController.value * 6.28,
-                          ),
+                          transform: GradientRotation(_gradientController.value * 6.28),
                         ),
                       ),
                       child: Padding(
@@ -300,21 +308,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: Row(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 16.0,
-                                  right: 8.0,
-                                ),
+                                padding: const EdgeInsets.only(left: 16.0, right: 8.0),
                                 child: GestureDetector(
                                   onTap: () {
                                     setState(() {
                                       _showHighlights = !_showHighlights;
                                     });
                                   },
-                                  child: Image.asset(
-                                    "assets/icons/star.png",
-                                    height: 20,
-                                    width: 20,
-                                  ),
+                                  child: Image.asset("assets/icons/star.png", height: 20, width: 20),
                                 ),
                               ),
                               Expanded(
@@ -333,44 +334,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                 child: Stack(
                                                   children: [
                                                     SlideTransition(
-                                                      position:
-                                                          _currentTextOffsetAnimation,
+                                                      position: _currentTextOffsetAnimation,
                                                       child: Align(
-                                                        alignment: Alignment
-                                                            .centerLeft,
+                                                        alignment: Alignment.centerLeft,
                                                         child: Text(
                                                           " ${_wearSuggestions[_currentSuggestionIndex]}",
-                                                          style:
-                                                              GoogleFonts.mulish(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 16,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                              ),
+                                                          style: GoogleFonts.mulish(
+                                                            color: Colors.white,
+                                                            fontSize: 16,
+                                                            fontStyle: FontStyle.italic,
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
                                                     SlideTransition(
-                                                      position:
-                                                          _nextTextOffsetAnimation,
+                                                      position: _nextTextOffsetAnimation,
                                                       child: Align(
-                                                        alignment: Alignment
-                                                            .centerLeft,
+                                                        alignment: Alignment.centerLeft,
                                                         child: Text(
                                                           " ${_wearSuggestions[_nextSuggestionIndex]}",
-                                                          style:
-                                                              const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 16,
-                                                                fontFamily:
-                                                                    "SatoshiR",
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                              ),
+                                                          style: const TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 16,
+                                                            fontFamily: "SatoshiR",
+                                                            fontStyle: FontStyle.italic,
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
@@ -384,9 +372,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     TextField(
                                       controller: _searchController,
                                       decoration: const InputDecoration(
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 0,
-                                        ),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 0),
                                         border: InputBorder.none,
                                         hintStyle: TextStyle(
                                           color: Colors.white,
@@ -406,11 +392,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 },
                                 child: const Padding(
                                   padding: EdgeInsets.only(right: 16.0),
-                                  child: Icon(
-                                    Icons.search,
-                                    color: Color(0xFFF0CF7B),
-                                    size: 24,
-                                  ),
+                                  child: Icon(Icons.search, color: Color(0xFFF0CF7B), size: 24),
                                 ),
                               ),
                             ],
@@ -428,116 +410,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildExplanationText(String text) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  /// ✅ Action Row for AI Messages
+  Widget _buildActionRow(String text) {
+    return Row(
       children: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.15),
-              width: 1.2,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              text.isEmpty ? "No explanation yet." : text,
-              style: GoogleFonts.mulish(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
-                height: 1.4,
-              ),
-            ),
-          ),
+        IconButton(
+          icon: const Icon(FluentIcons.copy_16_regular, size: 18, color: Color(0xFFFFA775)),
+          onPressed: () {
+            if (text.isNotEmpty) {
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Copied to clipboard')),
+              );
+            }
+          },
         ),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(
-                FluentIcons.copy_16_regular,
-                size: 18,
-                color: Color(0xFFFFA775),
+        IconButton(
+          icon: const Icon(FluentIcons.history_16_filled, size: 18, color: Color(0xFFFFA775)),
+          onPressed: _getExplanation,
+        ),
+        IconButton(
+          icon: const Icon(FluentIcons.share_ios_20_filled, size: 18, color: Color(0xFFFFA775)),
+          onPressed: () {
+            // Implement Share functionality
+          },
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          height: 36,
+          child: GestureDetector(
+            onTap: () => _openChatModal(initialMessage: text),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.2),
               ),
-              onPressed: () {
-                if (text.isNotEmpty) {
-                  Clipboard.setData(ClipboardData(text: text));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied to clipboard')),
-                  );
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(
-                FluentIcons.history_16_filled,
-                size: 18,
-                color: Color(0xFFFFA775),
-              ),
-              onPressed: () {
-                _getExplanation();
-              },
-            ),
-            IconButton(
-              icon: const Icon(
-                FluentIcons.share_ios_20_filled,
-                size: 18,
-                color: Color(0xFFFFA775),
-              ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: () {
-                // Share functionality
-              },
-            ),
-            const SizedBox(width: 8),
-            // New Chat Button
-            SizedBox(
-              height: 40,
-              child: GestureDetector(
-                onTap: () {
-                  _openChatModal(initialMessage: text);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(
-                      0.08,
-                    ), // translucent background
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.15),
-                      width: 1.2,
-                    ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset("assets/icons/star.png", height: 18, width: 18, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Ask",
+                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        "assets/icons/star.png", // your asset icon
-                        height: 18,
-                        width: 18,
-                        color: Colors.orange, // optional, to match the theme
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "Ask",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ],
     );
