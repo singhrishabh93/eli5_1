@@ -48,36 +48,40 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFF3951),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Static Title
-            Text(
-              "eli5",
-              style: GoogleFonts.mulish(
-                fontSize: 96,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 1),
-            // Animated Tagline
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: Text(
-                "Explain like I'm 5",
+      // backgroundColor: const Color(0xFFFF3951),
+      body: Stack(
+        children: [
+          Image.asset("assets/splashbg.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity), 
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Static Title
+              Text(
+                "eli5",
                 style: GoogleFonts.mulish(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 96,
+                  fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 1),
+              // Animated Tagline
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Text(
+                  "Explain like I'm 5",
+                  style: GoogleFonts.mulish(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),]
       ),
     );
   }

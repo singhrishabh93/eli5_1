@@ -10,10 +10,10 @@ class AnimatedGradientText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = [
-      const Color(0xFFFF6A7D),
-      const Color(0xFFFF5266),
-      const Color(0xFFFF3951),
-      const Color(0xFFE62940),
+      const Color(0xFFFFA775),
+      const Color(0xFFFFFFFF),
+      const Color(0xFFF0CF7B),
+      const Color(0xFFF5E8CF),
     ];
 
     return Animate(

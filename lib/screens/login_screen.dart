@@ -48,126 +48,124 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // #ffffff
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // AI loading animation (model.json)
-                    SizedBox(
-                      height: 250,
-                      child: Center(
-                        child: Lottie.asset(
-                          'assets/Ai loading model.json', // Lottie or Rive would be used for actual animation
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Text('AI animation placeholder');
-                          },
-                        ),
+      body: Stack(
+        children: [
+          Image.asset('assets/bg3.png', fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // AI loading animation (model.json)
+                  SizedBox(
+                    height: 250,
+                    child: Center(
+                      child: Lottie.asset(
+                        'assets/flower.json', // Lottie or Rive would be used for actual animation
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Text('AI animation placeholder');
+                        },
                       ),
                     ),
-                    const SizedBox(height: 48),
-
-                    // Ask Anything
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Ask Anything,",
-                          style: GoogleFonts.mulish(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w800, // ExtraBold
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.left,
+                  ),
+                  const SizedBox(height: 48),
+      
+                  // Ask Anything
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Ask Anything,",
+                        style: GoogleFonts.mulish(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w800, // ExtraBold
+                          color: Colors.white,
                         ),
-                        Text(
-                      "we’ll explain it simply",
-                      style: GoogleFonts.mulish(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800, // ExtraBold
-                        color: Colors.black,
+                        textAlign: TextAlign.left,
                       ),
-                      textAlign: TextAlign.left,
+                      Text(
+                    "we’ll explain it simply",
+                    style: GoogleFonts.mulish(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800, // ExtraBold
+                      color: Colors.white,
                     ),
-
-                      ],
-                    ),
-
-                    // We'll explain it simply
-                    
-                    const SizedBox(height: 32),
-
-                    // Google Sign In button
-                    _isLoading
-                        ? const CircularProgressIndicator()
-                        : SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton.icon(
-                              onPressed: _handleGoogleSignIn,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                elevation: 1,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                    textAlign: TextAlign.left,
+                  ),
+      
+                    ],
+                  ),
+      
+                  // We'll explain it simply
+                  
+                  const SizedBox(height: 32),
+      
+                  // Google Sign In button
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton.icon(
+                            onPressed: _handleGoogleSignIn,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              elevation: 1,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              icon: Image.asset(
-                                'assets/google.png',
-                                height: 24,
-                                width: 24,
-                              ),
-                              label: Text(
-                                "Continue with Google",
-                                style: GoogleFonts.roboto(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500, // Medium
-                                  color: Colors.black.withOpacity(0.54),
-                                ),
+                            ),
+                            icon: Image.asset(
+                              'assets/google.png',
+                              height: 24,
+                              width: 24,
+                            ),
+                            label: Text(
+                              "Continue with Google",
+                              style: GoogleFonts.roboto(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500, // Medium
+                                color: Colors.black.withOpacity(0.54),
                               ),
                             ),
                           ),
-
-                    const SizedBox(height: 24),
-
-                    // Terms text
-                    Text(
-                      "By signing in, you agree to our Terms of Service and Privacy Policy",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.mulish(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w300, // Light
-                        color: const Color(0xFF929292),
-                      ),
+                        ),
+      
+                  const SizedBox(height: 24),
+      
+                  // Terms text
+                  Text(
+                    "By signing in, you agree to our Terms of Service and Privacy Policy",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.mulish(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w300, // Light
+                      color: const Color(0xFF929292),
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Skip button top right
-            Positioned(
-              top: 16,
-              right: 16,
-              child: GestureDetector(
-                onTap: _skipSignIn,
-                child: Text(
-                  "Skip",
-                  style: GoogleFonts.mulish(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w300, // Light
-                    color: const Color(0xFF929292),
                   ),
+                ],
+              ),
+            ),
+          ),
+      
+          // Skip button top right
+          Positioned(
+            top: 40,
+            right: 16,
+            child: GestureDetector(
+              onTap: _skipSignIn,
+              child: Text(
+                "Skip",
+                style: GoogleFonts.mulish(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w300, // Light
+                  color: const Color(0xFF929292),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

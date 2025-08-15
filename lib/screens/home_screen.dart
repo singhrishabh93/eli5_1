@@ -139,18 +139,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: customAppBar(),
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Image.asset(
-            "assets/bg.png",
+            "assets/bg1.png",
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
           ),
+
+          Positioned(top: 0, left: 0, right: 0, child: customAppBar()),
           Column(
             children: [
+              SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -255,8 +257,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(30),
                         gradient: LinearGradient(
                           colors: [
-                            const Color(0xFFE62940),
-                            const Color(0xFFFFD700),
+                            const Color(0xFFFFA775),
+                            const Color(0xFFF0CF7B),
                           ],
                           stops: [0, 1.0],
                           begin: Alignment.centerLeft,
@@ -270,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         padding: const EdgeInsets.all(1.5),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Colors.black,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Row(
@@ -320,10 +322,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                           " ${_wearSuggestions[_currentSuggestionIndex]}",
                                                           style:
                                                               GoogleFonts.mulish(
-                                                            color: Colors.black87,
-                                                            fontSize: 16,
-                                                            fontStyle: FontStyle.italic,
-                                                          ),
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 16,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                              ),
                                                         ),
                                                       ),
                                                     ),
@@ -338,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                           style:
                                                               const TextStyle(
                                                                 color: Colors
-                                                                    .black54,
+                                                                    .white,
                                                                 fontSize: 16,
                                                                 fontFamily:
                                                                     "SatoshiR",
@@ -364,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         ),
                                         border: InputBorder.none,
                                         hintStyle: TextStyle(
-                                          color: Colors.black,
+                                          color: Colors.white,
                                           fontSize: 16,
                                           fontFamily: "SatoshiR",
                                         ),
@@ -383,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   padding: EdgeInsets.only(right: 16.0),
                                   child: Icon(
                                     Icons.search,
-                                    color: Colors.black,
+                                    color: Color(0xFFF0CF7B),
                                     size: 24,
                                   ),
                                 ),

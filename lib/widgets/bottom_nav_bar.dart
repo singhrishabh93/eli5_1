@@ -47,10 +47,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.black,
           currentIndex: _selectedIndex,
-          selectedItemColor: const Color(0xffFF3951),
-          unselectedItemColor: Colors.black,
+          selectedItemColor: const Color(0xffFFA775),
+          unselectedItemColor: Colors.white,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           onTap: _onItemTapped,
