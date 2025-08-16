@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     vertical: 8,
                   ),
                   child: Container(
-                    height: 50,
+                    height: 60,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(30),
@@ -443,6 +443,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                     TextField(
                                       controller: _searchController,
+                                      style: const TextStyle(
+                                        // This controls the typed text color
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontFamily: "SatoshiR",
+                                      ),
                                       decoration: const InputDecoration(
                                         contentPadding: EdgeInsets.symmetric(
                                           horizontal: 0,
@@ -466,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 child: const Padding(
                                   padding: EdgeInsets.only(right: 16.0),
                                   child: Icon(
-                                    Icons.search,
+                                    FluentIcons.send_20_filled,
                                     color: Color(0xFFF0CF7B),
                                     size: 24,
                                   ),
@@ -550,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    "Ask",
+                    "Explain",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,

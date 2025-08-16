@@ -56,7 +56,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           onTap: _onItemTapped,
           items: const [
             BottomNavigationBarItem(icon: Icon(FluentIcons.home_12_filled, size: 28), label: ''),
-            BottomNavigationBarItem(icon: Icon(FluentIcons.earth_16_filled, size: 28), label: ''),
+            BottomNavigationBarItem(icon: Icon(FluentIcons.compass_northwest_16_regular, size: 28), label: ''),
             BottomNavigationBarItem(icon: Icon(FluentIcons.data_trending_16_filled, size: 28), label: ''),
             BottomNavigationBarItem(icon: Icon(FluentIcons.library_16_filled, size: 28), label: ''),
           ],

@@ -3,6 +3,7 @@ import 'package:eli5/utils/knowledge_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shimmer/shimmer.dart';
 
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({Key? key}) : super(key: key);
@@ -17,20 +18,25 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
 
   final List<Map<String, String>> inventions = const [
     {
-      "image": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Light_bulb_invention.jpg",
+      "image":
+          "https://upload.wikimedia.org/wikipedia/commons/3/3a/Light_bulb_invention.jpg",
       "headline": "Light Bulb",
-      "text": "Revolutionized human life by enabling nighttime productivity."
+      "text": "Revolutionized human life by enabling nighttime productivity.",
     },
     {
-      "image": "https://upload.wikimedia.org/wikipedia/commons/4/45/First_phone.jpg",
+      "image":
+          "https://upload.wikimedia.org/wikipedia/commons/4/45/First_phone.jpg",
       "headline": "Telephone",
-      "text": "Connected people across the globe instantly."
+      "text": "Connected people across the globe instantly.",
     },
   ];
 
   final List<Map<String, String>> unusualWords = const [
     {"word": "Petrichor", "meaning": "The pleasant smell after rain."},
-    {"word": "Defenestration", "meaning": "The act of throwing someone out a window."},
+    {
+      "word": "Defenestration",
+      "meaning": "The act of throwing someone out a window.",
+    },
     {"word": "Limerence", "meaning": "The state of being infatuated."},
   ];
 
@@ -55,7 +61,9 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     try {
       List<Map<String, String>> facts = [];
       for (int i = 0; i < 6; i++) {
-        final res = await http.get(Uri.parse("https://uselessfacts.jsph.pl/random.json?language=en"));
+        final res = await http.get(
+          Uri.parse("https://uselessfacts.jsph.pl/random.json?language=en"),
+        );
         if (res.statusCode == 200) {
           final data = jsonDecode(res.body);
           facts.add({"fact": data["text"] ?? "No fact available"});
@@ -92,17 +100,16 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       setState(() => isLoadingHistory = false);
     }
   }
-  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // ✅ This is important
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black.withOpacity(0), // ✅ Fully transparent
+        backgroundColor: Colors.black.withOpacity(0),
         elevation: 0,
         scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent, // ✅ Prevent Material overlay tint
+        surfaceTintColor: Colors.transparent,
         title: Text(
           "Knowledge",
           style: GoogleFonts.mulish(
@@ -121,28 +128,35 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       ),
       body: Stack(
         children: [
-          Image.asset("assets/bg3.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Image.asset(
+            "assets/bg3.png",
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
           Padding(
-            padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.of(context).padding.top),
+            padding: EdgeInsets.only(
+              top: kToolbarHeight + MediaQuery.of(context).padding.top,
+            ),
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 12),
               children: [
                 _buildSectionTitle("Fun Science Facts"),
                 isLoadingFacts
-                    ? const Center(child: CircularProgressIndicator())
-                    : _buildHorizontalCards(funScienceFacts, isNeon: true),
-            
+                    ? _buildShimmerCards(6, height: 120, width: 180)
+                    : _buildHorizontalCards(funScienceFacts),
+
                 _buildSectionTitle("Today in History"),
                 isLoadingHistory
-                    ? const Center(child: CircularProgressIndicator())
+                    ? _buildShimmerCards(5, height: 250, width: 260)
                     : _buildGradientCards(todayInHistory),
-            
+
                 _buildSectionTitle("Inventions & Discoveries"),
                 _buildHorizontalImageCards(inventions),
-            
+
                 _buildSectionTitle("Unusual Words & Phrases"),
                 _buildWordCards(unusualWords),
-            
+
                 _buildSectionTitle("Random Questions"),
                 _buildHorizontalCards(
                   randomQuestions.map((q) => {"fact": q}).toList(),
@@ -163,13 +177,44 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         style: GoogleFonts.mulish(
           fontSize: 20,
           fontWeight: FontWeight.w800,
-          color: Colors.black87,
+          color: Colors.white,
+          shadows: [
+            Shadow(blurRadius: 4, color: Colors.black.withOpacity(0.6)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHorizontalCards(List<Map<String, String>> data, {bool isLarge = false, bool isNeon = false}) {
+  Widget _buildShimmerCards(int count, {required double height, required double width}) {
+    return SizedBox(
+      height: height,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        scrollDirection: Axis.horizontal,
+        itemCount: count,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          return Shimmer.fromColors(
+            baseColor: Colors.white.withOpacity(0.15),
+            highlightColor: Colors.white.withOpacity(0.3),
+            child: Container(
+              width: width,
+              height: height,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // --- Translucent Gradient Cards ---
+  Widget _buildHorizontalCards(List<Map<String, String>> data,
+      {bool isLarge = false, bool isNeon = false}) {
     return SizedBox(
       height: isLarge ? 200 : 120,
       child: ListView.separated(
@@ -178,15 +223,16 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         itemCount: data.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final cardColor = isNeon
-              ? (neonColors..shuffle()).first // random neon color each time
-              : Colors.grey.shade300;
           return Container(
             width: isLarge ? 220 : 180,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: cardColor,
+              color: Colors.white.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1.2,
+              ),
             ),
             child: Center(
               child: Text(
@@ -196,7 +242,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                 style: GoogleFonts.mulish(
                   fontSize: isLarge ? 18 : 16,
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -215,17 +261,16 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         itemCount: data.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final gradient = pastelGradients[index % pastelGradients.length];
           return Container(
             width: 260,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Colors.white.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1.2,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,7 +280,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                   style: GoogleFonts.mulish(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -243,7 +288,10 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                   data[index]["text"] ?? "",
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.mulish(fontSize: 14, color: Colors.black87),
+                  style: GoogleFonts.mulish(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),
@@ -266,32 +314,33 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
           return Container(
             width: 260,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
-              ],
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1.2,
+              ),
             ),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    item["headline"]!,
-                    style: GoogleFonts.mulish(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                Text(
+                  item["headline"]!,
+                  style: GoogleFonts.mulish(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    item["text"]!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.mulish(fontSize: 14, color: Colors.black87),
+                const SizedBox(height: 8),
+                Text(
+                  item["text"]!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.mulish(
+                    fontSize: 14,
+                    color: Colors.white70,
                   ),
                 ),
               ],
@@ -316,8 +365,12 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
             width: 200,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.purpleAccent,
+              color: Colors.white.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1.2,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,6 +380,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                   style: GoogleFonts.mulish(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -334,7 +388,10 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                   item["meaning"]!,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.mulish(fontSize: 14),
+                  style: GoogleFonts.mulish(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),

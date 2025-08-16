@@ -1,4 +1,3 @@
-// --- DiscoverScreen.dart ---
 import 'dart:convert';
 import 'dart:async';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -7,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
+import 'package:shimmer/shimmer.dart';
 import '../services/openai_service.dart';
 
 class DiscoverScreen extends StatefulWidget {
@@ -125,21 +125,80 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
+  Widget _buildShimmerList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.15),
+              width: 1.2,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Shimmer.fromColors(
+                  baseColor: Colors.white.withOpacity(0.08),
+                  highlightColor: Colors.white.withOpacity(0.25),
+                  child: Container(
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Shimmer.fromColors(
+                  baseColor: Colors.white.withOpacity(0.08),
+                  highlightColor: Colors.white.withOpacity(0.25),
+                  child: Container(
+                    height: 16,
+                    width: double.infinity,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Shimmer.fromColors(
+                  baseColor: Colors.white.withOpacity(0.08),
+                  highlightColor: Colors.white.withOpacity(0.25),
+                  child: Container(
+                    height: 14,
+                    width: 150,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // ✅ This is important
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black.withOpacity(0), // ✅ Fully transparent
+        backgroundColor: Colors.black.withOpacity(0),
         elevation: 0,
         scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent, // ✅ Prevent Material overlay tint
+        surfaceTintColor: Colors.transparent,
         title: Text(
           "Discover",
           style: GoogleFonts.mulish(
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            color: Color(0xffFFFFFF),
+            color: const Color(0xffFFFFFF),
           ),
         ),
         centerTitle: true,
@@ -190,18 +249,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? Color(0xffFFA775) // selected pill transparency
-                              : Colors.white.withOpacity(
-                                  0.08,
-                                ), // unselected pill transparency
+                              ? const Color(0xffFFA775)
+                              : Colors.white.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withOpacity(
-                              0.25,
-                            ), // subtle border
+                            color: Colors.white.withOpacity(0.25),
                             width: 1.2,
                           ),
-                          // Optional: shadow for slight elevation
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.2),
@@ -229,7 +283,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               const SizedBox(height: 12),
               Expanded(
                 child: isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? _buildShimmerList()
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(12),
@@ -263,9 +317,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                       children: [
                                         Container(
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           clipBehavior: Clip.hardEdge,
                                           child: article["urlToImage"] != null
@@ -302,9 +355,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                             child: Container(
                                               padding: const EdgeInsets.all(6),
                                               decoration: BoxDecoration(
-                                                color: Colors.black.withOpacity(
-                                                  0.4,
-                                                ),
+                                                color: Colors.black
+                                                    .withOpacity(0.4),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Icon(
@@ -313,8 +365,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                                     : Icons.favorite_border,
                                                 color:
                                                     article["isLiked"] == true
-                                                    ? Colors.red
-                                                    : Colors.white,
+                                                        ? Colors.red
+                                                        : Colors.white,
                                                 size: 20,
                                               ),
                                             ),
@@ -369,7 +421,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 }
 
-// --- Article Bottom Sheet ---
+// Keep your _ArticleDetailSheet class as is
 class _ArticleDetailSheet extends StatefulWidget {
   final Map<String, dynamic> article;
   const _ArticleDetailSheet({required this.article});
@@ -381,133 +433,199 @@ class _ArticleDetailSheet extends StatefulWidget {
 class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
   final _selectedSegment = ValueNotifier<String>('five');
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
-  List<String> _explanations = ["", "", ""];
-  bool _isLoading = false;
 
-  Future<void> _getExplanation() async {
-    final query = widget.article["title"] ?? "";
-    if (query.isEmpty) return;
-    setState(() => _isLoading = true);
+  final List<String> _explanations = ["", "", ""];
+  final List<bool> _isLoading = [false, false, false];
+  bool _hasExplanation = false;
+
+  Future<void> _loadThreeLevelExplanation() async {
+    for (int i = 0; i < 3; i++) {
+      setState(() => _isLoading[i] = true);
+    }
     try {
-      final results = await _geminiService.fetchExplanations(query);
-      setState(() => _explanations = results);
+      final results = await _geminiService
+          .fetchExplanations(widget.article["title"] ?? "");
+      setState(() {
+        _explanations[0] = results[0];
+        _explanations[1] = results[1];
+        _explanations[2] = results[2];
+        _hasExplanation = true;
+      });
     } catch (e) {
-      setState(() => _explanations = ["Error: $e", "", ""]);
+      setState(() {
+        _explanations[0] = "Error: $e";
+      });
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        for (int i = 0; i < 3; i++) {
+          _isLoading[i] = false;
+        }
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
-        top: 16,
-        left: 16,
-        right: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: Colors.black.withOpacity(0.95),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
           Container(
-            width: 40,
-            height: 4,
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            width: 50,
+            height: 5,
             decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
-          const SizedBox(height: 12),
           if (widget.article["urlToImage"] != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               child: Image.network(
                 widget.article["urlToImage"],
-                height: 180,
+                height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
             ),
-          const SizedBox(height: 12),
-          Text(
-            widget.article["title"] ?? "",
-            style: GoogleFonts.mulish(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.article["title"] ?? "",
+                    style: GoogleFonts.mulish(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    )),
+                const SizedBox(height: 8),
+                Text(widget.article["description"] ?? "",
+                    style: GoogleFonts.mulish(
+                        fontSize: 14, color: Colors.white70)),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            widget.article["description"] ?? "",
-            style: GoogleFonts.mulish(fontSize: 14, color: Colors.black87),
+          SizedBox(
+            height: 50,
+            child: GestureDetector(
+              onTap: _loadThreeLevelExplanation,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.15),
+                    width: 1.2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      "assets/icons/star.png",
+                      height: 18,
+                      width: 18,
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "Explain like I'm 5",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
-
-          // "Explain Like I'm 5" Button
-          ElevatedButton.icon(
-            onPressed: _getExplanation,
-            icon: Icon(Icons.lightbulb_outline),
-            label: Text("Explain Like I’m 5"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF3951),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
+          if (_hasExplanation)
+            Container(
+              height: 60,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Colors.yellowAccent.withOpacity(0.15),
+                  width: 1.2,
+                ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: AdvancedSegment(
+                controller: _selectedSegment,
+                segments: const {
+                  'five': "Like I’m 5",
+                  'fifteen': "Like I’m 15",
+                  'adult': "Like I’m an Adult",
+                },
+                backgroundColor: Colors.transparent,
+                sliderColor: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(30),
+                activeStyle: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Mulish',
+                  fontWeight: FontWeight.w600,
+                ),
+                inactiveStyle: const TextStyle(
+                  color: Colors.white70,
+                  fontFamily: 'Mulish',
+                  fontWeight: FontWeight.w500,
+                ),
+                itemPadding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-
-          if (_explanations.any((e) => e.isNotEmpty))
-            AdvancedSegment(
-              controller: _selectedSegment,
-              segments: const {
-                'five': "Like I’m 5",
-                'fifteen': "Like I’m 15",
-                'adult': "Like I’m an Adult",
-              },
-              backgroundColor: const Color(0xFFFF5266),
-              sliderColor: const Color(0xFFFF3951),
-              borderRadius: BorderRadius.circular(8),
-              activeStyle: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'Mulish',
-                fontWeight: FontWeight.w600,
-              ),
-              inactiveStyle: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'Mulish',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ValueListenableBuilder<String>(
-                    valueListenable: _selectedSegment,
-                    builder: (context, value, _) {
-                      int index = value == 'five'
-                          ? 0
-                          : value == 'fifteen'
+          if (_hasExplanation)
+            Expanded(
+              child: ValueListenableBuilder<String>(
+                valueListenable: _selectedSegment,
+                builder: (context, value, _) {
+                  int index = value == 'five'
+                      ? 0
+                      : value == 'fifteen'
                           ? 1
                           : 2;
-                      return SingleChildScrollView(
-                        child: Text(
-                          _explanations[index].isEmpty
-                              ? "No explanation yet."
-                              : _explanations[index],
-                          style: const TextStyle(fontSize: 16, height: 1.4),
+
+                  if (_isLoading[index] && _explanations[index].isEmpty) {
+                    return const Center(
+                        child: CircularProgressIndicator(
+                      color: Color(0xFFFFA775),
+                    ));
+                  }
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.15),
+                          width: 1.2,
                         ),
-                      );
-                    },
-                  ),
-          ),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        _explanations[index].isEmpty
+                            ? "No explanation yet."
+                            : _explanations[index],
+                        style: const TextStyle(
+                            fontSize: 16, height: 1.4, color: Colors.white),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );
