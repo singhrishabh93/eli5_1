@@ -374,6 +374,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     "assets/icons/star.png",
                                     height: 20,
                                     width: 20,
+                                    color: Colors.orange,
                                   ),
                                 ),
                               ),
@@ -449,6 +450,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         fontSize: 16,
                                         fontFamily: "SatoshiR",
                                       ),
+                                      cursorColor: Color(0xffFF0CF7B),
                                       decoration: const InputDecoration(
                                         contentPadding: EdgeInsets.symmetric(
                                           horizontal: 0,
@@ -555,9 +557,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     color: Colors.orange,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     "Explain",
-                    style: TextStyle(
+                    style: GoogleFonts.mulish(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
