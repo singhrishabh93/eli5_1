@@ -465,169 +465,186 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.95),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 50,
-            height: 5,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
-            ),
+Widget build(BuildContext context) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.95),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    child: Column(
+      children: [
+        // Drag handle
+        Container(
+          margin: const EdgeInsets.only(top: 12, bottom: 8),
+          width: 50,
+          height: 5,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(10),
           ),
-          if (widget.article["urlToImage"] != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                widget.article["urlToImage"],
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.article["title"] ?? "",
-                    style: GoogleFonts.mulish(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    )),
-                const SizedBox(height: 8),
-                Text(widget.article["description"] ?? "",
-                    style: GoogleFonts.mulish(
-                        fontSize: 14, color: Colors.white70)),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 50,
-            child: GestureDetector(
-              onTap: _loadThreeLevelExplanation,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      "assets/icons/star.png",
-                      height: 18,
-                      width: 18,
-                      color: Colors.orange,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "Explain like I'm 5",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+        ),
+
+        // Scrollable content
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.article["urlToImage"] != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        widget.article["urlToImage"],
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_hasExplanation)
-            Container(
-              height: 60,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: Colors.yellowAccent.withOpacity(0.15),
-                  width: 1.2,
-                ),
-              ),
-              child: AdvancedSegment(
-                controller: _selectedSegment,
-                segments: const {
-                  'five': "Like I’m 5",
-                  'fifteen': "Like I’m 15",
-                  'adult': "Like I’m an Adult",
-                },
-                backgroundColor: Colors.transparent,
-                sliderColor: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(30),
-                activeStyle: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Mulish',
-                  fontWeight: FontWeight.w600,
-                ),
-                inactiveStyle: const TextStyle(
-                  color: Colors.white70,
-                  fontFamily: 'Mulish',
-                  fontWeight: FontWeight.w500,
-                ),
-                itemPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-              ),
-            ),
-          if (_hasExplanation)
-            Expanded(
-              child: ValueListenableBuilder<String>(
-                valueListenable: _selectedSegment,
-                builder: (context, value, _) {
-                  int index = value == 'five'
-                      ? 0
-                      : value == 'fifteen'
-                          ? 1
-                          : 2;
-
-                  if (_isLoading[index] && _explanations[index].isEmpty) {
-                    return const Center(
-                        child: CircularProgressIndicator(
-                      color: Color(0xFFFFA775),
-                    ));
-                  }
-
-                  return SingleChildScrollView(
+                  Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Container(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(widget.article["title"] ?? "",
+                            style: GoogleFonts.mulish(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            )),
+                        const SizedBox(height: 8),
+                        Text(widget.article["description"] ?? "",
+                            style: GoogleFonts.mulish(
+                                fontSize: 14, color: Colors.white70)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Explain Button
+                  Center(
+                    child: GestureDetector(
+                      onTap: _loadThreeLevelExplanation,
+                      child: Container(
+                        height: 50,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.15),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              "assets/icons/star.png",
+                              height: 18,
+                              width: 18,
+                              color: Colors.orange,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              "Explain like I'm 5",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_hasExplanation)
+                    Container(
+                      height: 60,
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.yellowAccent.withOpacity(0.15),
                           width: 1.2,
                         ),
                       ),
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        _explanations[index].isEmpty
-                            ? "No explanation yet."
-                            : _explanations[index],
-                        style: const TextStyle(
-                            fontSize: 16, height: 1.4, color: Colors.white),
+                      child: AdvancedSegment(
+                        controller: _selectedSegment,
+                        segments: const {
+                          'five': "Like I’m 5",
+                          'fifteen': "Like I’m 15",
+                          'adult': "Like I’m an Adult",
+                        },
+                        backgroundColor: Colors.transparent,
+                        sliderColor: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(30),
+                        activeStyle: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Mulish',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        inactiveStyle: const TextStyle(
+                          color: Colors.white70,
+                          fontFamily: 'Mulish',
+                          fontWeight: FontWeight.w500,
+                        ),
+                        itemPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 12),
                       ),
                     ),
-                  );
-                },
+                  if (_hasExplanation)
+                    ValueListenableBuilder<String>(
+                      valueListenable: _selectedSegment,
+                      builder: (context, value, _) {
+                        int index = value == 'five'
+                            ? 0
+                            : value == 'fifteen'
+                                ? 1
+                                : 2;
+
+                        return Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: _isLoading[index] &&
+                                  _explanations[index].isEmpty
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                  color: Color(0xFFFFA775),
+                                ))
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.15),
+                                      width: 1.2,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    _explanations[index].isEmpty
+                                        ? "No explanation yet."
+                                        : _explanations[index],
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        height: 1.4,
+                                        color: Colors.white),
+                                  ),
+                                ),
+                        );
+                      },
+                    ),
+                ],
               ),
             ),
-        ],
-      ),
-    );
-  }
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

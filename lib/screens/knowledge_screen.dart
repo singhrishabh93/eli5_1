@@ -15,48 +15,32 @@ class KnowledgeScreen extends StatefulWidget {
 class _KnowledgeScreenState extends State<KnowledgeScreen> {
   List<Map<String, String>> funScienceFacts = [];
   List<Map<String, String>> todayInHistory = [];
+  List<Map<String, String>> triviaQuestions = [];
+  List<Map<String, String>> boredActivities = [];
+  List<Map<String, String>> quotes = [];
 
-  final List<Map<String, String>> inventions = const [
-    {
-      "image":
-          "https://upload.wikimedia.org/wikipedia/commons/3/3a/Light_bulb_invention.jpg",
-      "headline": "Light Bulb",
-      "text": "Revolutionized human life by enabling nighttime productivity.",
-    },
-    {
-      "image":
-          "https://upload.wikimedia.org/wikipedia/commons/4/45/First_phone.jpg",
-      "headline": "Telephone",
-      "text": "Connected people across the globe instantly.",
-    },
-  ];
-
-  final List<Map<String, String>> unusualWords = const [
-    {"word": "Petrichor", "meaning": "The pleasant smell after rain."},
-    {
-      "word": "Defenestration",
-      "meaning": "The act of throwing someone out a window.",
-    },
-    {"word": "Limerence", "meaning": "The state of being infatuated."},
-  ];
-
-  final List<String> randomQuestions = const [
-    "Why is the sky blue?",
-    "How does Wi-Fi work?",
-    "Why do cats purr?",
-    "Why is yawning contagious?",
-  ];
-
-  bool isLoadingFacts = true;
-  bool isLoadingHistory = true;
+  bool isLoading = true; // ✅ Single flag to control entire page loading
 
   @override
   void initState() {
     super.initState();
-    fetchUselessFact();
-    fetchTodayInHistory();
+    _fetchAllData();
   }
 
+  /// ✅ Fetch all data in parallel and wait until complete
+  Future<void> _fetchAllData() async {
+    await Future.wait([
+      fetchUselessFact(),
+      fetchTodayInHistory(),
+      fetchTrivia(),
+      fetchBoredActivities(),
+      fetchQuotes(),
+    ]);
+
+    setState(() => isLoading = false);
+  }
+
+  /// ✅ Fun Science Facts API
   Future<void> fetchUselessFact() async {
     try {
       List<Map<String, String>> facts = [];
@@ -69,35 +53,102 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
           facts.add({"fact": data["text"] ?? "No fact available"});
         }
       }
-      setState(() {
-        funScienceFacts = facts;
-      });
+      funScienceFacts = facts;
     } catch (e) {
       debugPrint("Error fetching facts: $e");
-    } finally {
-      setState(() => isLoadingFacts = false);
     }
   }
 
+  /// ✅ Today in History
   Future<void> fetchTodayInHistory() async {
     try {
-      final res = await http.get(Uri.parse("https://today.zenquotes.io/api"));
+      final now = DateTime.now();
+      final url =
+          "https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/${now.month}/${now.day}";
+      final res = await http.get(Uri.parse(url));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        final events = data["data"]["Events"] as List<dynamic>;
+        final events = data["events"] as List<dynamic>;
         List<Map<String, String>> eventsList = [];
         for (var event in events.take(5)) {
           String headline = event["text"] ?? "";
-          eventsList.add({"headline": headline, "text": headline});
+          String description =
+              event["pages"] != null && event["pages"].isNotEmpty
+                  ? event["pages"][0]["description"] ?? ""
+                  : "";
+          String image = (event["pages"] != null &&
+                  event["pages"].isNotEmpty &&
+                  event["pages"][0]["thumbnail"] != null)
+              ? event["pages"][0]["thumbnail"]["source"]
+              : "";
+          eventsList.add({
+            "headline": headline,
+            "text": description,
+            "image": image,
+          });
         }
-        setState(() {
-          todayInHistory = eventsList;
-        });
+        todayInHistory = eventsList;
       }
     } catch (e) {
       debugPrint("Error fetching history: $e");
-    } finally {
-      setState(() => isLoadingHistory = false);
+    }
+  }
+
+  /// ✅ Trivia API
+  Future<void> fetchTrivia() async {
+    try {
+      final res =
+          await http.get(Uri.parse("https://the-trivia-api.com/api/questions"));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as List<dynamic>;
+        List<Map<String, String>> triviaList = [];
+        for (var item in data.take(5)) {
+          triviaList.add({
+            "question": item["question"] ?? "",
+            "answer": item["correctAnswer"] ?? "",
+          });
+        }
+        triviaQuestions = triviaList;
+      }
+    } catch (e) {
+      debugPrint("Error fetching trivia: $e");
+    }
+  }
+
+  /// ✅ Bored API
+  Future<void> fetchBoredActivities() async {
+    try {
+      List<Map<String, String>> activities = [];
+      for (int i = 0; i < 6; i++) {
+        final res =
+            await http.get(Uri.parse("https://bored-api.appbrewery.com/random"));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          activities.add({"activity": data["activity"] ?? ""});
+        }
+      }
+      boredActivities = activities;
+    } catch (e) {
+      debugPrint("Error fetching bored activities: $e");
+    }
+  }
+
+  /// ✅ Quotes API (fetch multiple times)
+  Future<void> fetchQuotes() async {
+    try {
+      List<Map<String, String>> quoteList = [];
+      for (int i = 0; i < 6; i++) {
+        final res = await http.get(Uri.parse("https://zenquotes.io/api/random"));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as List<dynamic>;
+          if (data.isNotEmpty) {
+            quoteList.add({"fact": data[0]["q"] ?? ""});
+          }
+        }
+      }
+      quotes = quoteList;
+    } catch (e) {
+      debugPrint("Error fetching quotes: $e");
     }
   }
 
@@ -138,34 +189,58 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
             padding: EdgeInsets.only(
               top: kToolbarHeight + MediaQuery.of(context).padding.top,
             ),
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              children: [
-                _buildSectionTitle("Fun Science Facts"),
-                isLoadingFacts
-                    ? _buildShimmerCards(6, height: 120, width: 180)
-                    : _buildHorizontalCards(funScienceFacts),
+            child: isLoading
+                ? _buildFullPageShimmer()
+                : ListView(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    children: [
+                      _buildSectionTitle("Fun Science Facts"),
+                      _buildHorizontalCards(funScienceFacts),
 
-                _buildSectionTitle("Today in History"),
-                isLoadingHistory
-                    ? _buildShimmerCards(5, height: 250, width: 260)
-                    : _buildGradientCards(todayInHistory),
+                      _buildSectionTitle("Today in History"),
+                      _buildImageCards(todayInHistory),
 
-                _buildSectionTitle("Inventions & Discoveries"),
-                _buildHorizontalImageCards(inventions),
+                      _buildSectionTitle("Trivia Questions"),
+                      _buildHorizontalCards(
+                        triviaQuestions
+                            .map((q) => {"fact": q["question"]!})
+                            .toList(),
+                        isLarge: true,
+                      ),
 
-                _buildSectionTitle("Unusual Words & Phrases"),
-                _buildWordCards(unusualWords),
+                      _buildSectionTitle("Bored Activities"),
+                      _buildHorizontalCards(
+                        boredActivities
+                            .map((a) => {"fact": a["activity"]!})
+                            .toList(),
+                      ),
 
-                _buildSectionTitle("Random Questions"),
-                _buildHorizontalCards(
-                  randomQuestions.map((q) => {"fact": q}).toList(),
-                ),
-              ],
-            ),
+                      _buildSectionTitle("Motivational Quotes"),
+                      _buildHorizontalCards(quotes),
+                    ],
+                  ),
           ),
         ],
       ),
+    );
+  }
+
+  /// ✅ Shimmer for full page
+  Widget _buildFullPageShimmer() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      children: [
+        _buildSectionTitle("Fun Science Facts"),
+        _buildShimmerCards(6, height: 120, width: 180),
+        _buildSectionTitle("Today in History"),
+        _buildShimmerCards(5, height: 250, width: 260),
+        _buildSectionTitle("Trivia Questions"),
+        _buildShimmerCards(5, height: 120, width: 220),
+        _buildSectionTitle("Bored Activities"),
+        _buildShimmerCards(6, height: 120, width: 180),
+        _buildSectionTitle("Motivational Quotes"),
+        _buildShimmerCards(6, height: 120, width: 180),
+      ],
     );
   }
 
@@ -186,7 +261,8 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     );
   }
 
-  Widget _buildShimmerCards(int count, {required double height, required double width}) {
+  Widget _buildShimmerCards(int count,
+      {required double height, required double width}) {
     return SizedBox(
       height: height,
       child: ListView.separated(
@@ -212,9 +288,8 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     );
   }
 
-  // --- Translucent Gradient Cards ---
   Widget _buildHorizontalCards(List<Map<String, String>> data,
-      {bool isLarge = false, bool isNeon = false}) {
+      {bool isLarge = false}) {
     return SizedBox(
       height: isLarge ? 200 : 120,
       child: ListView.separated(
@@ -252,7 +327,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     );
   }
 
-  Widget _buildGradientCards(List<Map<String, String>> data) {
+  Widget _buildImageCards(List<Map<String, String>> data) {
     return SizedBox(
       height: 250,
       child: ListView.separated(
@@ -261,56 +336,6 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         itemCount: data.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          return Container(
-            width: 260,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1.2,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data[index]["headline"] ?? "",
-                  style: GoogleFonts.mulish(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  data[index]["text"] ?? "",
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.mulish(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildHorizontalImageCards(List<Map<String, String>> data) {
-    return SizedBox(
-      height: 250,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        scrollDirection: Axis.horizontal,
-        itemCount: data.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = data[index];
           return Container(
             width: 260,
             decoration: BoxDecoration(
@@ -325,67 +350,30 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (data[index]["image"]!.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      data[index]["image"]!,
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                const SizedBox(height: 8),
                 Text(
-                  item["headline"]!,
+                  data[index]["headline"]!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.mulish(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
-                  item["text"]!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.mulish(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildWordCards(List<Map<String, String>> words) {
-    return SizedBox(
-      height: 140,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        scrollDirection: Axis.horizontal,
-        itemCount: words.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = words[index];
-          return Container(
-            width: 200,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1.2,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item["word"]!,
-                  style: GoogleFonts.mulish(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  item["meaning"]!,
+                  data[index]["text"]!,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.mulish(
