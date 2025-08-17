@@ -220,7 +220,6 @@ class _ChatModalState extends State<ChatModal> {
                 }
               },
             ),
-            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(
                 FluentIcons.history_16_filled,

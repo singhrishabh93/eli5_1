@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _searchController = TextEditingController();
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
   bool _showHighlights = false;
+  final ScrollController _scrollController = ScrollController();
 
   /// ✅ Store all messages persistently
   List<Map<String, String>> _homeMessages = [];
@@ -132,7 +133,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _isLoading = true;
       _homeMessages.add({"role": "user", "message": query});
+      _searchController.clear(); // ✅ Clear immediately after sending message
     });
+    _scrollToBottom();
 
     try {
       /// ✅ Fetch 3 responses like old logic
@@ -156,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           "message_adult": "",
         });
       });
+      _scrollToBottom();
     } finally {
       setState(() {
         _isLoading = false;
@@ -163,6 +167,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
     }
   }
+
+  void _scrollToBottom() {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOut,
+      );
+    }
+  });
+}
+
 
   void _openChatModal({String? initialMessage}) {
     showModalBottomSheet(
@@ -259,6 +276,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: AnimatedGradientText(text: "Hey Awesome!"),
                         )
                       : ListView.builder(
+                          controller: _scrollController,
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           itemCount:
                               _homeMessages.length + (_isLoading ? 1 : 0),
