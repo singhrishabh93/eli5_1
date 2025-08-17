@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<Offset> _currentTextOffsetAnimation;
   late Animation<Offset> _nextTextOffsetAnimation;
   late Timer _suggestionTimer;
+  late AnimationController _rotationController;
 
   final List<String> _wearSuggestions = [
     "Ask eli5 why popcorn pops",
@@ -61,6 +62,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _isUserTyping = _searchController.text.trim().isNotEmpty;
       });
     });
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
 
     _gradientController = AnimationController(
       vsync: this,
@@ -114,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _textAnimController.dispose();
     _suggestionTimer.cancel();
     _searchController.dispose();
+    _rotationController.dispose();
     super.dispose();
   }
 
@@ -256,15 +263,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           itemCount:
                               _homeMessages.length + (_isLoading ? 1 : 0),
                           itemBuilder: (context, index) {
+                            // ✅ Show loader as the last item if still loading
                             if (_isLoading && index == _homeMessages.length) {
-                              return const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(12.0),
-                                  child: CircularProgressIndicator(),
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                  horizontal: 16,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    RotationTransition(
+                                      turns: _rotationController,
+                                      child: Image.asset(
+                                        "assets/icons/star.png",
+                                        height: 22,
+                                        width: 22,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "Just a sec...",
+                                      style: GoogleFonts.mulish(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             }
 
+                            // ✅ Render messages normally
                             final msg = _homeMessages[index];
                             final isUser = msg["role"] == "user";
 
