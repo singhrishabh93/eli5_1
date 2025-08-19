@@ -22,8 +22,9 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-   @override
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
   bool get wantKeepAlive => true; //
 
   final _selectedSegment = ValueNotifier<String>('five');
@@ -240,6 +241,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     });
   }
 
+  void _handleNewChat() {
+  setState(() {
+    _currentChatId = null; // reset chat
+    _homeMessages.clear(); // clear UI
+  });
+}
+
   void _openChatModal({String? initialMessage}) {
     showModalBottomSheet(
       context: context,
@@ -256,16 +264,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   Widget build(BuildContext context) {
     super.build(context); // ✅ must call when using keepAlive
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _currentChatId = null; // ✅ reset chat
-            _homeMessages.clear(); // ✅ clear UI
-          });
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
-      ),
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
@@ -275,7 +273,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             width: double.infinity,
             height: double.infinity,
           ),
-          Positioned(top: 0, left: 0, right: 0, child: customAppBar()),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: customAppBar(context, onNewChat: _handleNewChat),
+          ),
           Column(
             children: [
               SizedBox(
@@ -564,6 +567,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                                       ),
                                     TextField(
                                       controller: _searchController,
+                                      enabled:
+                                          !_isLoading, // ⬅️ disable input while waiting
                                       style: const TextStyle(
                                         // This controls the typed text color
                                         color: Colors.white,
@@ -582,20 +587,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                                           fontFamily: "SatoshiR",
                                         ),
                                       ),
-                                      onSubmitted: (_) => _getExplanation(),
+                                      onSubmitted: (_) => !_isLoading
+                                          ? _getExplanation()
+                                          : null, // ⬅️ block enter
                                     ),
                                   ],
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () {
-                                  _getExplanation();
-                                },
-                                child: const Padding(
+                                onTap: _isLoading
+                                    ? null
+                                    : _getExplanation, // ⬅️ disable tap
+                                child: Padding(
                                   padding: EdgeInsets.only(right: 16.0),
                                   child: Icon(
                                     FluentIcons.send_20_filled,
-                                    color: Color(0xFFF0CF7B),
+                                    color: _isLoading
+                                        ? Colors.grey
+                                        : const Color(
+                                            0xFFF0CF7B,
+                                          ), // ⬅️ grey out when disabled
                                     size: 24,
                                   ),
                                 ),
