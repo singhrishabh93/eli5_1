@@ -2,6 +2,7 @@ import 'package:eli5/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -35,6 +36,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
   ];
 
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isOnboarded', true);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+
   void _nextPage() {
     if (_currentPage < _pages.length - 1) {
       _pageController.animateToPage(
@@ -43,22 +53,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        ),
-      );
+      _completeOnboarding();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Image.asset("assets/bg1.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-          // Swipable Pages
+          Image.asset("assets/bg1.png",
+              fit: BoxFit.cover, width: double.infinity, height: double.infinity),
           PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
@@ -69,11 +75,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               final page = _pages[index];
               return Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Lottie animation - same height as LoginScreen
                       SizedBox(
                         height: 250,
                         child: Center(
@@ -84,8 +90,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       const SizedBox(height: 48),
-      
-                      // Titles & description - same alignment as LoginScreen
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -118,19 +122,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ],
                       ),
-      
                       const SizedBox(height: 32),
-      
-                      // Center arrow button (instead of Google sign-in)
                       FloatingActionButton(
                         onPressed: _nextPage,
                         backgroundColor: Colors.white,
-                        child: const Icon(Icons.arrow_forward, color: Colors.black),
+                        child:
+                            const Icon(Icons.arrow_forward, color: Colors.black),
                       ),
-      
                       const SizedBox(height: 24),
-      
-                      // Page indicator dots (instead of terms text)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(_pages.length, (dotIndex) {
@@ -154,20 +153,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               );
             },
           ),
-      
-          // Skip button in same position as LoginScreen
           Positioned(
             top: 40,
             right: 16,
             child: GestureDetector(
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginScreen(),
-                  ),
-                );
-              },
+              onTap: _completeOnboarding,
               child: Text(
                 "Skip",
                 style: GoogleFonts.mulish(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../widgets/bottom_nav_bar.dart';
 
@@ -21,6 +22,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (mounted) {
       if (user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -36,7 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _skipSignIn() {
+  Future<void> _skipSignIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -48,21 +55,22 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Image.asset('assets/bg3.png', fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Image.asset('assets/bg3.png',
+              fit: BoxFit.cover, width: double.infinity, height: double.infinity),
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // AI loading animation (model.json)
                   SizedBox(
                     height: 250,
                     child: Center(
                       child: Lottie.asset(
-                        'assets/flower.json', // Lottie or Rive would be used for actual animation
+                        'assets/flower.json',
                         errorBuilder: (context, error, stackTrace) {
                           return const Text('AI animation placeholder');
                         },
@@ -70,8 +78,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-      
-                  // Ask Anything
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -79,29 +85,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         "Ask Anything,",
                         style: GoogleFonts.mulish(
                           fontSize: 36,
-                          fontWeight: FontWeight.w800, // ExtraBold
+                          fontWeight: FontWeight.w800,
                           color: Colors.white,
                         ),
                         textAlign: TextAlign.left,
                       ),
                       Text(
-                    "we’ll explain it simply",
-                    style: GoogleFonts.mulish(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800, // ExtraBold
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-      
+                        "we’ll explain it simply",
+                        style: GoogleFonts.mulish(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
                     ],
                   ),
-      
-                  // We'll explain it simply
-                  
                   const SizedBox(height: 32),
-      
-                  // Google Sign In button
                   _isLoading
                       ? const CircularProgressIndicator()
                       : SizedBox(
@@ -125,22 +125,19 @@ class _LoginScreenState extends State<LoginScreen> {
                               "Continue with Google",
                               style: GoogleFonts.roboto(
                                 fontSize: 20,
-                                fontWeight: FontWeight.w500, // Medium
+                                fontWeight: FontWeight.w500,
                                 color: Colors.black.withOpacity(0.54),
                               ),
                             ),
                           ),
                         ),
-      
                   const SizedBox(height: 24),
-      
-                  // Terms text
                   Text(
                     "By signing in, you agree to our Terms of Service and Privacy Policy",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.mulish(
                       fontSize: 11,
-                      fontWeight: FontWeight.w300, // Light
+                      fontWeight: FontWeight.w300,
                       color: const Color(0xFF929292),
                     ),
                   ),
@@ -148,8 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-      
-          // Skip button top right
           Positioned(
             top: 40,
             right: 16,
@@ -159,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 "Skip",
                 style: GoogleFonts.mulish(
                   fontSize: 18,
-                  fontWeight: FontWeight.w300, // Light
+                  fontWeight: FontWeight.w300,
                   color: const Color(0xFF929292),
                 ),
               ),

@@ -1,7 +1,9 @@
 import 'package:eli5/screens/login_screen.dart';
 import 'package:eli5/screens/onboarding/onboarding_page1.dart';
+import 'package:eli5/widgets/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -31,11 +33,27 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Navigate after animation
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-      );
+    Future.delayed(const Duration(seconds: 3), () async {
+      final prefs = await SharedPreferences.getInstance();
+      bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      bool isOnboarded = prefs.getBool('isOnboarded') ?? false;
+
+      if (isLoggedIn) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const BottomNavBar(initialIndex: 0)),
+        );
+      } else if (isOnboarded) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        );
+      }
     });
   }
 
@@ -48,15 +66,13 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: const Color(0xFFFF3951),
-      body: Stack(
-        children: [
-          Image.asset("assets/splashbg.png", fit: BoxFit.cover, width: double.infinity, height: double.infinity), 
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Static Title
+      body: Stack(children: [
+        Image.asset("assets/splashbg.png",
+            fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
               Text(
                 "eli5",
                 style: GoogleFonts.mulish(
@@ -66,7 +82,6 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
               const SizedBox(height: 1),
-              // Animated Tagline
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Text(
@@ -81,8 +96,8 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ],
           ),
-        ),]
-      ),
+        ),
+      ]),
     );
   }
 }
