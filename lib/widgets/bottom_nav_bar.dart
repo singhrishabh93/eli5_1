@@ -41,7 +41,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: _widgetOptions.elementAt(_selectedIndex),
+      body: IndexedStack(
+      index: _selectedIndex,
+      children: _widgetOptions,
+    ),
       bottomNavigationBar: SizedBox(
         height: kIsWeb ? 70 : Platform.isIOS ? 95 : 90,
         child: BottomNavigationBar(

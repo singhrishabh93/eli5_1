@@ -22,7 +22,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+   @override
+  bool get wantKeepAlive => true; //
+
   final _selectedSegment = ValueNotifier<String>('five');
   final _searchController = TextEditingController();
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
@@ -251,6 +254,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // ✅ must call when using keepAlive
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
