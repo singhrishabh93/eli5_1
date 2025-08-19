@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eli5/widgets/animated_text.dart';
 import 'package:eli5/widgets/appbar.dart';
 import 'package:eli5/widgets/chat_modal.dart';
 import 'package:eli5/widgets/highlights_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +28,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final _geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
   bool _showHighlights = false;
   final ScrollController _scrollController = ScrollController();
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+  String? _currentChatId;
 
   /// ✅ Store all messages persistently
   List<Map<String, String>> _homeMessages = [];
@@ -117,6 +122,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _currentChatId = null; // ✅ clear chat session
+    _homeMessages.clear(); // ✅ optional: clear messages too
     _gradientController.dispose();
     _textAnimController.dispose();
     _suggestionTimer.cancel();
@@ -125,22 +132,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  Future<void> _startNewChat() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final chatDoc = await _firestore
+        .collection("users")
+        .doc(user.uid)
+        .collection("chats")
+        .add({"createdAt": FieldValue.serverTimestamp(), "messages": []});
+
+    _currentChatId = chatDoc.id;
+  }
+
+  Future<void> _appendMessage(Map<String, dynamic> message) async {
+    final user = _auth.currentUser;
+    if (user == null || _currentChatId == null) return;
+
+    await _firestore
+        .collection("users")
+        .doc(user.uid)
+        .collection("chats")
+        .doc(_currentChatId)
+        .update({
+          "messages": FieldValue.arrayUnion([message]),
+        });
+  }
+
   /// ✅ Modified to keep old messages and append new response
   Future<void> _getExplanation() async {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
+    // 🔹 Ensure we have a chat session
+    if (_currentChatId == null) {
+      await _startNewChat();
+    }
+
+    // 🔹 Add user message immediately
     setState(() {
       _isLoading = true;
       _homeMessages.add({"role": "user", "message": query});
-      _searchController.clear(); // ✅ Clear immediately after sending message
+      _searchController.clear(); // clear input box
     });
+    await _appendMessage({"role": "user", "message": query});
+
     _scrollToBottom();
 
     try {
-      /// ✅ Fetch 3 responses like old logic
+      /// ✅ Fetch 3 responses from AI
       final results = await _geminiService.fetchExplanations(query);
-      // results[0] => Like I'm 5, results[1] => Like I'm 15, results[2] => Like I'm an Adult
 
       setState(() {
         _homeMessages.add({
@@ -150,6 +191,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           "message_adult": results[2],
         });
       });
+
+      await _appendMessage({
+        "role": "ai",
+        "message_five": results[0],
+        "message_fifteen": results[1],
+        "message_adult": results[2],
+      });
+
+      _scrollToBottom();
     } catch (e) {
       setState(() {
         _homeMessages.add({
@@ -159,27 +209,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           "message_adult": "",
         });
       });
+
+      await _appendMessage({
+        "role": "ai",
+        "message_five": "Error: $e",
+        "message_fifteen": "",
+        "message_adult": "",
+      });
+
       _scrollToBottom();
     } finally {
       setState(() {
         _isLoading = false;
-        _searchController.clear();
       });
     }
   }
 
   void _scrollToBottom() {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOut,
-      );
-    }
-  });
-}
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   void _openChatModal({String? initialMessage}) {
     showModalBottomSheet(
@@ -196,6 +252,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            _currentChatId = null; // ✅ reset chat
+            _homeMessages.clear(); // ✅ clear UI
+          });
+        },
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.add),
+      ),
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
