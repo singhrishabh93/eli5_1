@@ -21,11 +21,11 @@ It helps you learn concepts in **three levels**:
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="screenshots/screen1.png" alt="Screen 1" width="200"/>
-  <img src="screenshots/screen2.png" alt="Screen 2" width="200"/>
-  <img src="screenshots/screen3.png" alt="Screen 3" width="200"/>
-  <img src="screenshots/screen4.png" alt="Screen 3" width="200"/>
-  <img src="screenshots/screen5.png" alt="Screen 3" width="200"/>
+  <img src="[screenshots/screen1.png](https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/1.png)" alt="Screen 1" width="200"/>
+  <img src="[screenshots/screen2.png](https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/2.png)" alt="Screen 2" width="200"/>
+  <img src="[screenshots/screen3](https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/3.png).png" alt="Screen 3" width="200"/>
+  <img src="[screenshots/screen4](https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/4.png).png" alt="Screen 3" width="200"/>
+  <img src="[screenshots/screen5.png](https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/5.png)" alt="Screen 3" width="200"/>
   <img src="screenshots/screen6.png" alt="Screen 3" width="200"/>
   <img src="screenshots/screen7.png" alt="Screen 3" width="200"/>
   <img src="screenshots/screen8.png" alt="Screen 3" width="200"/>
