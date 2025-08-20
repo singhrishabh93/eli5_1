@@ -145,21 +145,21 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          Positioned(
-            top: 40,
-            right: 16,
-            child: GestureDetector(
-              onTap: _skipSignIn,
-              child: Text(
-                "Skip",
-                style: GoogleFonts.mulish(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w300,
-                  color: const Color(0xFF929292),
-                ),
-              ),
-            ),
-          ),
+          // Positioned(
+          //   top: 40,
+          //   right: 16,
+          //   child: GestureDetector(
+          //     onTap: _skipSignIn,
+          //     child: Text(
+          //       "Skip",
+          //       style: GoogleFonts.mulish(
+          //         fontSize: 18,
+          //         fontWeight: FontWeight.w300,
+          //         color: const Color(0xFF929292),
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
