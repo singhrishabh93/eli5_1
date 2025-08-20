@@ -1,55 +1,66 @@
-# eli5 (Explain Like I'm 5)
+# 📚 eli5 (Explain Like I'm 5)
 
-eli5 is a Flutter-powered mobile app designed to simplify complex topics and provide easy-to-understand explanations. Whether it's trending news, general queries, or quick tips, eli5 explains it in a way even a 5-year-old can understand.
-
----
-
-## Features
-
-✅ **Explain Like I'm 5** – Get simple explanations for complex topics  
-✅ **Daily Discover Section** – Stay updated with trending news + simple summaries  
-✅ **Ask Anything** – General chat for your questions  
-✅ **Fun & Fashion** – Outfit ideas for different occasions  
-✅ **Creative Mode** – Personalised and easy breakdown of your queries  
+eli5 is a Flutter-based mobile application designed to explain complex topics in the simplest way possible—like you're 5 years old!  
+It helps you learn concepts in **three levels**:  
+- 👶 Like I'm 5 years old  
+- 🧒 Like I'm 15 years old  
+- 🧑 Like I'm an adult with science background  
 
 ---
 
-## Screenshots
+## ✨ Features
 
-![Screenshot 1](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/1.png)
-![Screenshot 2](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/2.png)
-![Screenshot 3](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/3.png)
-![Screenshot 4](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/4.png)
-![Screenshot 5](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/5.png)
-![Screenshot 6](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/6.png)
-![Screenshot 7](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/7.png)
-![Screenshot 8](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/8.png)
-![Screenshot 9](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/9.png)
-![Screenshot 10](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/10.png)
-![Screenshot 11](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/11.png)
-![Screenshot 12](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/12.png)
+✅ Simplified explanations in three levels  
+✅ Discover trending topics to learn  
+✅ Save your favorite explanations for later  
+✅ Share knowledge with friends easily  
+✅ Minimal and beautiful UI  
 
 ---
 
-## Getting Started
+## 📸 Screenshots
 
-This project is built using **Flutter**.
+<p align="center">
+  <img src="screenshots/screen1.png" alt="Screen 1" width="200"/>
+  <img src="screenshots/screen2.png" alt="Screen 2" width="200"/>
+  <img src="screenshots/screen3.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen4.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen5.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen6.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen7.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen8.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen9.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen10.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen11.png" alt="Screen 3" width="200"/>
+  <img src="screenshots/screen12.png" alt="Screen 3" width="200"/>
+</p>
 
-### Prerequisites
-- Flutter SDK installed ([Install Guide](https://docs.flutter.dev/get-started/install))
-- Dart SDK
-- Android Studio / VS Code with Flutter plugins
+---
 
-### Installation
-```bash
-# Clone the repo
-git clone https://github.com/your-username/eli5.git
+## 🚀 Getting Started
 
-# Navigate to project folder
-cd eli5
+This project is a starting point for a Flutter application.
 
-# Install dependencies
-flutter pub get
+To get started:
 
-# Run the app
-flutter run
+1. **Clone the repository**
+    ```bash
+    git clone https://github.com/your-username/eli5.git
+    ```
+2. **Navigate to the project directory**
+    ```bash
+    cd eli5
+    ```
+3. **Install dependencies**
+    ```bash
+    flutter pub get
+    ```
+4. **Run the app**
+    ```bash
+    flutter run
+    ```
+
+---
+
+## 📂 Folder Structure
+
