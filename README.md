@@ -16,18 +16,18 @@ eli5 is a Flutter-powered mobile app designed to simplify complex topics and pro
 
 ## Screenshots
 
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/1.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/2.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/3.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/4.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/5.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/6.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/7.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/8.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/9.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/10.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/11.png
-https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/12.png
+![Screenshot 1](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/1.png)
+![Screenshot 2](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/2.png)
+![Screenshot 3](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/3.png)
+![Screenshot 4](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/4.png)
+![Screenshot 5](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/5.png)
+![Screenshot 6](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/6.png)
+![Screenshot 7](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/7.png)
+![Screenshot 8](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/8.png)
+![Screenshot 9](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/9.png)
+![Screenshot 10](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/10.png)
+![Screenshot 11](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/11.png)
+![Screenshot 12](https://github.com/singhrishabh93/eli5_1/raw/main/screenshots/12.png)
 
 ---
 
