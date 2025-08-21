@@ -4,7 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/services.dart';
-import '../services/openai_service.dart';
+import '../services/gemini_service.dart';
 
 class ChatModal extends StatefulWidget {
   final GeminiService geminiService;

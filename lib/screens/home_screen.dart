@@ -12,7 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/openai_service.dart';
+import '../services/gemini_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? initialQuery;
