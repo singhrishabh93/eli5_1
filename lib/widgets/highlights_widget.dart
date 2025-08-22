@@ -1,13 +1,47 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
+import 'package:shimmer/shimmer.dart';
 
-class HighlightsWidget extends StatelessWidget {
-  final Function(String) onCardTap; // Callback to start search
+class HighlightsWidget extends StatefulWidget {
+  final Function(String) onCardTap;
 
   const HighlightsWidget({Key? key, required this.onCardTap}) : super(key: key);
 
-  void _showPodcastPlayer(BuildContext context) {
+  @override
+  State<HighlightsWidget> createState() => _HighlightsWidgetState();
+}
+
+class _HighlightsWidgetState extends State<HighlightsWidget> {
+  List<dynamic> songs = [];
+  int currentIndex = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSongs();
+  }
+
+  Future<void> fetchSongs() async {
+    final url =
+        "https://itunes.apple.com/lookup?upc=720642462928&entity=song";
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final results = data["results"] ?? [];
+
+      setState(() {
+        songs = results.where((r) => r["wrapperType"] == "track").toList();
+        isLoading = false;
+      });
+    }
+  }
+
+  void _showSongPlayer(BuildContext context, dynamic song) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -16,11 +50,11 @@ class HighlightsWidget extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return const PodcastPlayerModal(
-          audioUrl: "https://www.listennotes.com/e/p/a5ae21acf75a43538b635cf6b089f0b3/",
-          title: "Podcast Daily",
-          subtitle:
-              "Aug 13 • 3 min  Unions push AI safeguards, US-China tariff truce, Food influencers clash, and more",
+        return PodcastPlayerModal(
+          audioUrl: song["previewUrl"],
+          title: song["trackName"] ?? "Unknown",
+          subtitle: song["artistName"] ?? "",
+          imageUrl: song["artworkUrl100"] ?? "https://picsum.photos/200",
         );
       },
     );
@@ -31,11 +65,82 @@ class HighlightsWidget extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        _greeting(),
+        Text("It's great to see you",
+            style: GoogleFonts.mulish(
+                fontSize: 22, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
-        _podcastSection(context),
+
+        // 🎵 Dynamic music card with shimmer
+        isLoading || songs.isEmpty
+            ? Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              )
+            : GestureDetector(
+                onTap: () {
+                  final song = songs[currentIndex];
+                  _showSongPlayer(context, song);
+                  // cycle songs
+                  setState(() {
+                    currentIndex = (currentIndex + 1) % songs.length;
+                  });
+                },
+                child: Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        songs[currentIndex]["artworkUrl100"],
+                      ),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        songs[currentIndex]["trackName"] ?? "Song",
+                        style: GoogleFonts.mulish(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        songs[currentIndex]["artistName"] ?? "",
+                        style: GoogleFonts.mulish(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: const Text("Play now",
+                            style: TextStyle(color: Colors.black)),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+
         const SizedBox(height: 24),
 
+        // 🔹 Rest of your sections remain unchanged
         _sectionWithMagazineGrid(
           "Stories to explore",
           [
@@ -44,19 +149,19 @@ class HighlightsWidget extends StatelessWidget {
               title: "\$5M grandparent scam targeting seniors dismantled",
               subtitle:
                   "How the scam operated, lavish lifestyles, AI’s role, and more",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?2",
               title: "Alaska braces for record-breaking glacial flood threat",
               subtitle: "Communities preparing for glacial surge",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?3",
               title: "Adidas faces backlash over Oaxaca-inspired sandal",
               subtitle: "Cultural debate over new shoe design",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
           ],
         ),
@@ -69,19 +174,19 @@ class HighlightsWidget extends StatelessWidget {
               imageUrl: "https://picsum.photos/400/400?4",
               title: "Build connections and thrive in a new city",
               subtitle: "Tips to settle and connect faster",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?5",
               title: "Embrace chaos gardening for surprise blooms",
               subtitle: "Let nature surprise you",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?6",
               title: "Discover morning routines for better productivity",
               subtitle: "Start your day right",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
           ],
         ),
@@ -94,19 +199,19 @@ class HighlightsWidget extends StatelessWidget {
               imageUrl: "https://picsum.photos/400/400?7",
               title: "Find your zen with simple breathwork tips",
               subtitle: "Easy mindfulness breathing",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?8",
               title: "Navigate airport madness with ease",
               subtitle: "Travel like a pro",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
             _imageCard(
               imageUrl: "https://picsum.photos/400/200?9",
               title: "Learn to cook one new dish a week",
               subtitle: "Expand your culinary skills",
-              onTap: onCardTap,
+              onTap: widget.onCardTap,
             ),
           ],
         ),
@@ -114,68 +219,17 @@ class HighlightsWidget extends StatelessWidget {
     );
   }
 
-  Widget _greeting() {
-    return Text(
-      "It's great to see you",
-      style: GoogleFonts.mulish(
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-      ),
-    );
-  }
-
-  Widget _podcastSection(BuildContext context) {
-    return Column(
-      children: [
-        _podcastCard(context),
-      ],
-    );
-  }
-
-  Widget _podcastCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Podcast Daily",
-              style: GoogleFonts.mulish(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18)),
-          const SizedBox(height: 8),
-          Text(
-              "Aug 13 • 3 min  Unions push AI safeguards, US-China tariff truce, Food influencers clash, and more",
-              style: GoogleFonts.mulish(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14)),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => _showPodcastPlayer(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: const Text("Play now"),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _sectionWithMagazineGrid(String title, List<Widget> cards) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle(title),
+        Text(
+          title,
+          style: GoogleFonts.mulish(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,16 +255,6 @@ class HighlightsWidget extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.mulish(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-      ),
     );
   }
 
@@ -294,12 +338,14 @@ class PodcastPlayerModal extends StatefulWidget {
   final String audioUrl;
   final String title;
   final String subtitle;
+  final String imageUrl;
 
   const PodcastPlayerModal({
     Key? key,
     required this.audioUrl,
     required this.title,
     required this.subtitle,
+    required this.imageUrl,
   }) : super(key: key);
 
   @override
@@ -352,9 +398,7 @@ class _PodcastPlayerModalState extends State<PodcastPlayerModal> {
         children: [
           CircleAvatar(
             radius: 48,
-            backgroundImage: NetworkImage(
-              "https://picsum.photos/200",
-            ),
+            backgroundImage: NetworkImage(widget.imageUrl),
           ),
           const SizedBox(height: 16),
           Text(widget.title,
