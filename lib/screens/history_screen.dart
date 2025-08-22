@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class HistoryScreen extends StatelessWidget {
   final _auth = FirebaseAuth.instance;
@@ -46,7 +47,7 @@ class HistoryScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          /// Background
+          /// 🔹 Background
           Image.asset(
             "assets/bg2.png",
             fit: BoxFit.cover,
@@ -54,7 +55,7 @@ class HistoryScreen extends StatelessWidget {
             height: double.infinity,
           ),
 
-          /// Chat history list
+          /// 🔹 Chat history list
           Padding(
             padding: EdgeInsets.only(
               top: kToolbarHeight + MediaQuery.of(context).padding.top,
@@ -85,47 +86,88 @@ class HistoryScreen extends StatelessWidget {
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   itemCount: chats.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 4),
+                  separatorBuilder: (_, __) => Divider(
+                    color: Colors.white.withOpacity(0.2),
+                    thickness: 0.5,
+                    height: 20,
+                    indent: 16,
+                    endIndent: 16,
+                  ),
                   itemBuilder: (context, index) {
                     final chat = chats[index].data() as Map<String, dynamic>;
                     final messages =
                         List<Map<String, dynamic>>.from(chat["messages"] ?? []);
 
-                    final preview = messages.isNotEmpty
-                        ? (messages.firstWhere(
-                                (msg) => msg["role"] == "user",
-                                orElse: () => {"message": "New Chat"})["message"] ??
-                            "New Chat")
-                        : "New Chat";
+                    // 🔹 Title preview → first user message
+                    final preview = messages.firstWhere(
+                      (msg) => msg["role"] == "user",
+                      orElse: () => {"message": "New Chat"},
+                    )["message"] ?? "New Chat";
 
-                    return ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(8),
+                    // 🔹 Subtitle preview → assistant "Like I’m 5" response
+                    final aiPreview = messages.firstWhere(
+                      (msg) => msg["role"] == "assistant",
+                      orElse: () => {"message_five": ""},
+                    )["message_five"] ?? "";
+
+                    final createdAt = chat["createdAt"] != null
+                        ? (chat["createdAt"] as Timestamp).toDate()
+                        : DateTime.now();
+
+                    return InkWell(
+                      onTap: () => _openChatModal(context, messages),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            /// 🔸 Title
+                            Text(
+                              preview,
+                              style: GoogleFonts.mulish(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+
+                            const SizedBox(height: 4),
+
+                            /// 🔸 Subtitle
+                            if (aiPreview.isNotEmpty)
+                              Text(
+                                aiPreview,
+                                style: GoogleFonts.mulish(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+
+                            const SizedBox(height: 6),
+
+                            /// 🔸 Time row
+                            Row(
+                              children: [
+                                Icon(Icons.access_time,
+                                    size: 14, color: Colors.white70),
+                                const SizedBox(width: 4),
+                                Text(
+                                  timeago.format(createdAt),
+                                  style: GoogleFonts.mulish(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        child: const Icon(Icons.history, color: Colors.black54),
                       ),
-                      title: Text(
-                        preview,
-                        style: GoogleFonts.mulish(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        "${messages.length} messages",
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                      onTap: () {
-                        _openChatModal(context, messages);
-                      },
                     );
                   },
                 );
@@ -137,7 +179,7 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  /// 🔹 Modal to show messages with segment switcher
+  /// 🔹 Modal bottom sheet
   void _openChatModal(
       BuildContext context, List<Map<String, dynamic>> messages) {
     final selectedSegment = ValueNotifier<String>('five');
@@ -203,7 +245,7 @@ class HistoryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
 
-                    /// 🔸 Chat Messages
+                    /// 🔸 Messages list
                     Expanded(
                       child: ValueListenableBuilder<String>(
                         valueListenable: selectedSegment,
@@ -227,6 +269,8 @@ class HistoryScreen extends StatelessWidget {
                                   text = msg["message_adult"] ?? "";
                                 }
                               }
+
+                              if (text.isEmpty) return const SizedBox.shrink();
 
                               return Align(
                                 alignment: isUser
