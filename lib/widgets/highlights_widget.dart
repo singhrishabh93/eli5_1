@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
@@ -18,16 +19,18 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
   List<dynamic> songs = [];
   int currentIndex = 0;
   bool isLoading = true;
+  List<dynamic> newsArticles = [];
+  bool isNewsLoading = true;
 
   @override
   void initState() {
     super.initState();
     fetchSongs();
+    fetchNews();
   }
 
   Future<void> fetchSongs() async {
-    final url =
-        "https://itunes.apple.com/lookup?upc=720642462928&entity=song";
+    final url = "https://itunes.apple.com/lookup?upc=720642462928&entity=song";
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -38,6 +41,29 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
         songs = results.where((r) => r["wrapperType"] == "track").toList();
         isLoading = false;
       });
+    }
+  }
+
+  // 📰 Fetch top 3 news
+  Future<void> fetchNews() async {
+    final apiKey = dotenv.env['NEWS_API_KEY'] ?? "";
+    final url =
+        "https://newsapi.org/v2/top-headlines?country=us&pageSize=3&apiKey=$apiKey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          newsArticles = data["articles"] ?? [];
+          isNewsLoading = false;
+        });
+      } else {
+        setState(() => isNewsLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching news: $e");
+      setState(() => isNewsLoading = false);
     }
   }
 
@@ -65,9 +91,10 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        Text("It's great to see you",
-            style: GoogleFonts.mulish(
-                fontSize: 22, fontWeight: FontWeight.w800)),
+        Text(
+          "It's great to see you",
+          style: GoogleFonts.mulish(fontSize: 22, fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 16),
 
         // 🎵 Dynamic music card with shimmer
@@ -97,9 +124,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     image: DecorationImage(
-                      image: NetworkImage(
-                        songs[currentIndex]["artworkUrl100"],
-                      ),
+                      image: NetworkImage(songs[currentIndex]["artworkUrl100"]),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -110,29 +135,35 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
                       Text(
                         songs[currentIndex]["trackName"] ?? "Song",
                         style: GoogleFonts.mulish(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18),
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         songs[currentIndex]["artistName"] ?? "",
                         style: GoogleFonts.mulish(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 14),
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 14,
+                        ),
                       ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        child: const Text("Play now",
-                            style: TextStyle(color: Colors.black)),
-                      )
+                        child: const Text(
+                          "Play now",
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -140,82 +171,81 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
         const SizedBox(height: 24),
 
-        // 🔹 Rest of your sections remain unchanged
+        // 🔹 Stories to explore (dynamic news)
         _sectionWithMagazineGrid(
           "Stories to explore",
-          [
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/400?1",
-              title: "\$5M grandparent scam targeting seniors dismantled",
-              subtitle:
-                  "How the scam operated, lavish lifestyles, AI’s role, and more",
-              onTap: widget.onCardTap,
-            ),
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/200?2",
-              title: "Alaska braces for record-breaking glacial flood threat",
-              subtitle: "Communities preparing for glacial surge",
-              onTap: widget.onCardTap,
-            ),
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/200?3",
-              title: "Adidas faces backlash over Oaxaca-inspired sandal",
-              subtitle: "Cultural debate over new shoe design",
-              onTap: widget.onCardTap,
-            ),
-          ],
+          isNewsLoading
+              ? List.generate(3, (_) => _shimmerNewsCard()) // shimmer
+              : List.generate(newsArticles.length, (i) {
+                  final article = newsArticles[i];
+                  return _imageCard(
+                    imageUrl:
+                        article["urlToImage"] ??
+                        "https://picsum.photos/400?fallback=$i",
+                    title: article["title"] ?? "No title",
+                    subtitle: article["description"] ?? "",
+                    onTap: widget.onCardTap,
+                  );
+                }),
         ),
         const SizedBox(height: 24),
 
-        _sectionWithMagazineGrid(
-          "Ideas to explore",
-          [
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/400?4",
-              title: "Build connections and thrive in a new city",
-              subtitle: "Tips to settle and connect faster",
-              onTap: widget.onCardTap,
-            ),
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/200?5",
-              title: "Embrace chaos gardening for surprise blooms",
-              subtitle: "Let nature surprise you",
-              onTap: widget.onCardTap,
-            ),
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/200?6",
-              title: "Discover morning routines for better productivity",
-              subtitle: "Start your day right",
-              onTap: widget.onCardTap,
-            ),
-          ],
-        ),
+        _sectionWithMagazineGrid("Ideas to explore", [
+          _imageCard(
+            imageUrl: "https://picsum.photos/400/400?4",
+            title: "Build connections and thrive in a new city",
+            subtitle: "Tips to settle and connect faster",
+            onTap: widget.onCardTap,
+          ),
+          _imageCard(
+            imageUrl: "https://picsum.photos/400/200?5",
+            title: "Embrace chaos gardening for surprise blooms",
+            subtitle: "Let nature surprise you",
+            onTap: widget.onCardTap,
+          ),
+          _imageCard(
+            imageUrl: "https://picsum.photos/400/200?6",
+            title: "Discover morning routines for better productivity",
+            subtitle: "Start your day right",
+            onTap: widget.onCardTap,
+          ),
+        ]),
         const SizedBox(height: 24),
 
-        _sectionWithMagazineGrid(
-          "Topics I thought you'd enjoy",
-          [
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/400?7",
-              title: "Find your zen with simple breathwork tips",
-              subtitle: "Easy mindfulness breathing",
-              onTap: widget.onCardTap,
-            ),
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/200?8",
-              title: "Navigate airport madness with ease",
-              subtitle: "Travel like a pro",
-              onTap: widget.onCardTap,
-            ),
-            _imageCard(
-              imageUrl: "https://picsum.photos/400/200?9",
-              title: "Learn to cook one new dish a week",
-              subtitle: "Expand your culinary skills",
-              onTap: widget.onCardTap,
-            ),
-          ],
-        ),
+        _sectionWithMagazineGrid("Topics I thought you'd enjoy", [
+          _imageCard(
+            imageUrl: "https://picsum.photos/400/400?7",
+            title: "Find your zen with simple breathwork tips",
+            subtitle: "Easy mindfulness breathing",
+            onTap: widget.onCardTap,
+          ),
+          _imageCard(
+            imageUrl: "https://picsum.photos/400/200?8",
+            title: "Navigate airport madness with ease",
+            subtitle: "Travel like a pro",
+            onTap: widget.onCardTap,
+          ),
+          _imageCard(
+            imageUrl: "https://picsum.photos/400/200?9",
+            title: "Learn to cook one new dish a week",
+            subtitle: "Expand your culinary skills",
+            onTap: widget.onCardTap,
+          ),
+        ]),
       ],
+    );
+  }
+
+  static Widget _shimmerNewsCard() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
     );
   }
 
@@ -225,22 +255,13 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
       children: [
         Text(
           title,
-          style: GoogleFonts.mulish(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+          style: GoogleFonts.mulish(fontSize: 20, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 2,
-              child: SizedBox(
-                height: 240,
-                child: cards[0],
-              ),
-            ),
+            Expanded(flex: 2, child: SizedBox(height: 240, child: cards[0])),
             const SizedBox(width: 12),
             Expanded(
               flex: 1,
@@ -309,8 +330,11 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
                           ),
                         ),
                       ),
-                      const Icon(Icons.more_vert,
-                          color: Colors.white, size: 18),
+                      const Icon(
+                        Icons.more_vert,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ],
                   ),
                   const Spacer(),
@@ -401,14 +425,19 @@ class _PodcastPlayerModalState extends State<PodcastPlayerModal> {
             backgroundImage: NetworkImage(widget.imageUrl),
           ),
           const SizedBox(height: 16),
-          Text(widget.title,
-              style: GoogleFonts.mulish(
-                  fontSize: 20, fontWeight: FontWeight.w700)),
+          Text(
+            widget.title,
+            style: GoogleFonts.mulish(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(widget.subtitle,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.mulish(
-                  fontSize: 14, color: Colors.grey[600])),
+          Text(
+            widget.subtitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.mulish(fontSize: 14, color: Colors.grey[600]),
+          ),
           const SizedBox(height: 24),
           _isLoading
               ? const CircularProgressIndicator()
