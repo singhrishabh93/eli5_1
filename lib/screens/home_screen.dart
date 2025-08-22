@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen>
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   String? _currentChatId;
+  String? _lastQuery;
 
   /// ✅ Store all messages persistently
   List<Map<String, String>> _homeMessages = [];
@@ -166,26 +167,36 @@ class _HomeScreenState extends State<HomeScreen>
   /// ✅ Modified to keep old messages and append new response
   Future<void> _getExplanation() async {
     final query = _searchController.text.trim();
-    if (query.isEmpty) return;
+
+    // ✅ Use _lastQuery if input is empty (for regenerate)
+    if (query.isEmpty && _lastQuery == null) return;
+    _lastQuery = query.isNotEmpty ? query : _lastQuery;
 
     // 🔹 Ensure we have a chat session
     if (_currentChatId == null) {
       await _startNewChat();
     }
 
-    // 🔹 Add user message immediately
-    setState(() {
-      _isLoading = true;
-      _homeMessages.add({"role": "user", "message": query});
-      _searchController.clear(); // clear input box
-    });
-    await _appendMessage({"role": "user", "message": query});
+    // 🔹 If user typed new query
+    if (query.isNotEmpty) {
+      setState(() {
+        _isLoading = true;
+        _homeMessages.add({"role": "user", "message": query});
+        _searchController.clear(); // clear input box
+      });
+      await _appendMessage({"role": "user", "message": query});
 
-    _scrollToBottom();
+      _scrollToBottom();
+    } else {
+      // ✅ Regenerate case → just show loader
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
-      /// ✅ Fetch 3 responses from AI
-      final results = await _geminiService.fetchExplanations(query);
+      /// ✅ Fetch new responses always using _lastQuery
+      final results = await _geminiService.fetchExplanations(_lastQuery!);
 
       setState(() {
         _homeMessages.add({
@@ -242,11 +253,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _handleNewChat() {
-  setState(() {
-    _currentChatId = null; // reset chat
-    _homeMessages.clear(); // clear UI
-  });
-}
+    setState(() {
+      _currentChatId = null; // reset chat
+      _homeMessages.clear(); // clear UI
+    });
+  }
 
   void _openChatModal({String? initialMessage}) {
     showModalBottomSheet(
@@ -651,7 +662,11 @@ class _HomeScreenState extends State<HomeScreen>
             size: 18,
             color: Color(0xFFFFA775),
           ),
-          onPressed: _getExplanation,
+          onPressed: () {
+            if (_lastQuery != null && !_isLoading) {
+              _getExplanation();
+            }
+          },
         ),
         IconButton(
           icon: const Icon(
