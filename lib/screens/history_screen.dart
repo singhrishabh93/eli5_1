@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eli5/services/gemini_service.dart';
+import 'package:eli5/widgets/history_chat_modal.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -165,8 +168,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           endIndent: 16,
                         ),
                         itemBuilder: (context, index) {
-                          final chat =
-                              filteredChats[index].data() as Map<String, dynamic>;
+                          final chatDoc = filteredChats[index];
+                          final chat = chatDoc.data() as Map<String, dynamic>;
                           final messages =
                               List<Map<String, dynamic>>.from(chat["messages"] ?? []);
 
@@ -185,7 +188,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               : DateTime.now();
 
                           return InkWell(
-                            onTap: () => _openChatModal(context, messages),
+                            onTap: () => _openChatModal(
+                              context,
+                              messages,
+                              chatDoc.id, // ✅ pass chatId properly
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
@@ -254,8 +261,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   /// 🔹 Modal bottom sheet
   void _openChatModal(
-      BuildContext context, List<Map<String, dynamic>> messages) {
-    final selectedSegment = ValueNotifier<String>('five');
+    BuildContext context,
+    List<Map<String, dynamic>> messages,
+    String chatId,
+  ) {
+    final geminiService = GeminiService(dotenv.env['GEMINI_API_KEY'] ?? "");
 
     showModalBottomSheet(
       context: context,
@@ -264,132 +274,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.85,
-              maxChildSize: 0.95,
-              builder: (_, controller) {
-                return Column(
-                  children: [
-                    const SizedBox(height: 12),
-
-                    /// 🔸 Switcher
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.15),
-                            width: 1.2,
-                          ),
-                        ),
-                        child: AdvancedSegment(
-                          controller: selectedSegment,
-                          segments: const {
-                            'five': "Like I’m 5",
-                            'fifteen': "Like I’m 15",
-                            'adult': "Like I’m an Adult",
-                          },
-                          backgroundColor: Colors.transparent,
-                          sliderColor: Colors.yellowAccent.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(30),
-                          activeStyle: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Mulish',
-                            fontWeight: FontWeight.w600,
-                          ),
-                          inactiveStyle: const TextStyle(
-                            color: Colors.white70,
-                            fontFamily: 'Mulish',
-                            fontWeight: FontWeight.w500,
-                          ),
-                          itemPadding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    /// 🔸 Messages list
-                    Expanded(
-                      child: ValueListenableBuilder<String>(
-                        valueListenable: selectedSegment,
-                        builder: (context, selected, _) {
-                          return ListView.builder(
-                            controller: controller,
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              final msg = messages[index];
-                              final isUser = msg["role"] == "user";
-
-                              String text = "";
-                              if (isUser) {
-                                text = msg["message"] ?? "";
-                              } else {
-                                if (selected == 'five') {
-                                  text = msg["message_five"] ?? "";
-                                } else if (selected == 'fifteen') {
-                                  text = msg["message_fifteen"] ?? "";
-                                } else {
-                                  text = msg["message_adult"] ?? "";
-                                }
-                              }
-
-                              if (text.isEmpty) return const SizedBox.shrink();
-
-                              return Align(
-                                alignment: isUser
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 6),
-                                  padding: const EdgeInsets.all(12),
-                                  constraints: BoxConstraints(
-                                    maxWidth:
-                                        MediaQuery.of(context).size.width * 0.7,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isUser
-                                        ? const Color(0xFFFFA775)
-                                        : Colors.white.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: MarkdownBody(
-                                    data: text,
-                                    styleSheet: MarkdownStyleSheet(
-                                      p: GoogleFonts.mulish(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                      ),
-                                      strong: GoogleFonts.mulish(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
+      builder: (_) => HistoryChatModal(
+        messages: messages,
+        chatId: chatId,
+        geminiService: geminiService,
+      ),
     );
   }
 }
