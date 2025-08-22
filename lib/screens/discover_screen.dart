@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/gemini_service.dart';
 
 class DiscoverScreen extends StatefulWidget {
@@ -463,6 +465,44 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
     }
   }
 
+  Widget _buildArticleText() {
+  String description = widget.article["description"] ?? "";
+  String content = widget.article["content"] ?? "";
+
+  // Remove the [+XYZ chars] part
+  bool hasMore = RegExp(r'\[\+\d+ chars\]').hasMatch(content);
+  content = content.replaceAll(RegExp(r'\[\+\d+ chars\]'), '');
+
+  return RichText(
+    text: TextSpan(
+      children: [
+        TextSpan(
+          text: "$description\n\n$content",
+          style: GoogleFonts.mulish(
+            fontSize: 14,
+            color: Colors.white70,
+          ),
+        ),
+        if (hasMore || (widget.article["url"]?.isNotEmpty ?? false))
+          TextSpan(
+            text: "Read more",
+            style: GoogleFonts.mulish(
+              fontSize: 14,
+              color: Colors.orange,
+              fontWeight: FontWeight.w600,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                if (widget.article["url"] != null) {
+                  launchUrl(Uri.parse(widget.article["url"]));
+                }
+              },
+          ),
+      ],
+    ),
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -493,13 +533,16 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (widget.article["urlToImage"] != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(
-                          widget.article["urlToImage"],
-                          height: 200,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            widget.article["urlToImage"],
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     Padding(
@@ -516,13 +559,7 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            widget.article["description"] ?? "",
-                            style: GoogleFonts.mulish(
-                              fontSize: 14,
-                              color: Colors.white70,
-                            ),
-                          ),
+                          _buildArticleText(),
                         ],
                       ),
                     ),
