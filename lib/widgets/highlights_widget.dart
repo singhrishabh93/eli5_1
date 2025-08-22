@@ -1,4 +1,9 @@
+// ✨ Added new APIs (Advice & HackerNews)
+// Replaced static "Ideas to explore" + "Topics I thought you'd enjoy"
+// with dynamic API content (3 cards each)
+
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,14 +24,23 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
   List<dynamic> songs = [];
   int currentIndex = 0;
   bool isLoading = true;
+
   List<dynamic> newsArticles = [];
   bool isNewsLoading = true;
+
+  List<String> advices = [];
+  bool isAdviceLoading = true;
+
+  List<Map<String, dynamic>> topics = [];
+  bool isTopicsLoading = true;
 
   @override
   void initState() {
     super.initState();
     fetchSongs();
     fetchNews();
+    fetchAdvices();
+    fetchTopics();
   }
 
   Future<void> fetchSongs() async {
@@ -67,6 +81,83 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
     }
   }
 
+  // 💡 Fetch 3 advices
+  Future<void> fetchAdvices() async {
+    List<String> results = [];
+    try {
+      for (int i = 0; i < 3; i++) {
+        final res = await http.get(
+          Uri.parse("https://api.adviceslip.com/advice"),
+        );
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          results.add(data["slip"]["advice"]);
+        } else {
+          results.add("Stay positive and keep going!"); // fallback
+        }
+      }
+      setState(() {
+        advices = results;
+        isAdviceLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error fetching advices: $e");
+      setState(() {
+        advices = List.filled(3, "Take it easy!"); // safe fallback
+        isAdviceLoading = false;
+      });
+    }
+  }
+
+  // 🌐 Fetch 3 HackerNews topics
+  Future<void> fetchTopics() async {
+    List<Map<String, dynamic>> results = [];
+    var rng = Random();
+    try {
+      for (int i = 0; i < 3; i++) {
+        bool gotOne = false;
+        int attempts = 0;
+        while (!gotOne && attempts < 5) {
+          // retry up to 5 times
+          final id = 1000 + rng.nextInt(9000);
+          final url =
+              "https://hacker-news.firebaseio.com/v0/item/$id.json?print=pretty";
+          final res = await http.get(Uri.parse(url));
+          attempts++;
+          if (res.statusCode == 200) {
+            final data = jsonDecode(res.body);
+            if (data != null && data["text"] != null) {
+              results.add({"title": "Discussion #$id", "text": data["text"]});
+              gotOne = true;
+            }
+          }
+        }
+        if (!gotOne) {
+          results.add({
+            "title": "Discussion",
+            "text": "No interesting topic found right now.",
+          });
+        }
+      }
+      setState(() {
+        topics = results;
+        isTopicsLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error fetching topics: $e");
+      setState(() {
+        topics = List.generate(
+          3,
+          (i) => {
+            "title": "Discussion",
+            "text": "Something went wrong. Try again later.",
+          },
+        );
+        isTopicsLoading = false;
+      });
+    }
+  }
+
   void _showSongPlayer(BuildContext context, dynamic song) {
     showModalBottomSheet(
       context: context,
@@ -97,157 +188,154 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
         ),
         const SizedBox(height: 16),
 
-        // 🎵 Dynamic music card with shimmer
+        // 🎵 Songs
         isLoading || songs.isEmpty
-            ? Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
-                child: Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-              )
+            ? _songShimmer()
             : GestureDetector(
                 onTap: () {
                   final song = songs[currentIndex];
                   _showSongPlayer(context, song);
-                  // cycle songs
                   setState(() {
                     currentIndex = (currentIndex + 1) % songs.length;
                   });
                 },
-                child: Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    image: DecorationImage(
-                      image: NetworkImage(songs[currentIndex]["artworkUrl100"]),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        songs[currentIndex]["trackName"] ?? "Song",
-                        style: GoogleFonts.mulish(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        songs[currentIndex]["artistName"] ?? "",
-                        style: GoogleFonts.mulish(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: const Text(
-                          "Play now",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _songCard(songs[currentIndex]),
               ),
 
         const SizedBox(height: 24),
 
-        // 🔹 Stories to explore (dynamic news)
+        // 🔹 Stories
         _sectionWithMagazineGrid(
           "Stories to explore",
           isNewsLoading
-              ? List.generate(3, (_) => _shimmerNewsCard()) // shimmer
-              : List.generate(newsArticles.length, (i) {
-                  final article = newsArticles[i];
-                  return _imageCard(
-                    imageUrl:
-                        article["urlToImage"] ??
-                        "https://picsum.photos/400?fallback=$i",
-                    title: article["title"] ?? "No title",
-                    subtitle: article["description"] ?? "",
-                    onTap: widget.onCardTap,
-                  );
+              ? List.generate(3, (_) => _shimmerNewsCard())
+              : List.generate(3, (i) {
+                  if (i < newsArticles.length) {
+                    final article = newsArticles[i];
+                    return _imageCard(
+                      imageUrl:
+                          article["urlToImage"] ??
+                          "https://picsum.photos/400?fallback=$i",
+                      title: article["title"] ?? "No title",
+                      subtitle: article["description"] ?? "",
+                      onTap: widget.onCardTap,
+                    );
+                  }
+                  // pad with shimmer if missing
+                  return _shimmerNewsCard();
                 }),
         ),
         const SizedBox(height: 24),
 
-        _sectionWithMagazineGrid("Ideas to explore", [
-          _imageCard(
-            imageUrl: "https://picsum.photos/400/400?4",
-            title: "Build connections and thrive in a new city",
-            subtitle: "Tips to settle and connect faster",
-            onTap: widget.onCardTap,
-          ),
-          _imageCard(
-            imageUrl: "https://picsum.photos/400/200?5",
-            title: "Embrace chaos gardening for surprise blooms",
-            subtitle: "Let nature surprise you",
-            onTap: widget.onCardTap,
-          ),
-          _imageCard(
-            imageUrl: "https://picsum.photos/400/200?6",
-            title: "Discover morning routines for better productivity",
-            subtitle: "Start your day right",
-            onTap: widget.onCardTap,
-          ),
-        ]),
+        // 💡 Advices
+        _sectionWithMagazineGrid(
+          "Ideas to explore",
+          isAdviceLoading
+              ? List.generate(3, (_) => _shimmerNewsCard())
+              : List.generate(3, (i) {
+                  if (i < advices.length) {
+                    return _imageCard(
+                      imageUrl: "https://picsum.photos/400/400?advice$i",
+                      title: "Advice",
+                      subtitle: advices[i],
+                      onTap: widget.onCardTap,
+                    );
+                  }
+                  // pad with shimmer if missing
+                  return _shimmerNewsCard();
+                }),
+        ),
         const SizedBox(height: 24),
 
-        _sectionWithMagazineGrid("Topics I thought you'd enjoy", [
-          _imageCard(
-            imageUrl: "https://picsum.photos/400/400?7",
-            title: "Find your zen with simple breathwork tips",
-            subtitle: "Easy mindfulness breathing",
-            onTap: widget.onCardTap,
-          ),
-          _imageCard(
-            imageUrl: "https://picsum.photos/400/200?8",
-            title: "Navigate airport madness with ease",
-            subtitle: "Travel like a pro",
-            onTap: widget.onCardTap,
-          ),
-          _imageCard(
-            imageUrl: "https://picsum.photos/400/200?9",
-            title: "Learn to cook one new dish a week",
-            subtitle: "Expand your culinary skills",
-            onTap: widget.onCardTap,
-          ),
-        ]),
+        // 🌐 Topics
+        _sectionWithMagazineGrid(
+          "Topics I thought you'd enjoy",
+          isTopicsLoading
+              ? List.generate(3, (_) => _shimmerNewsCard())
+              : List.generate(3, (i) {
+                  if (i < topics.length) {
+                    return _imageCard(
+                      imageUrl: "https://picsum.photos/400/400?topic$i",
+                      title: topics[i]["title"],
+                      subtitle: topics[i]["text"],
+                      onTap: widget.onCardTap,
+                    );
+                  }
+                  // pad with shimmer if missing
+                  return _shimmerNewsCard();
+                }),
+        ),
       ],
     );
   }
 
-  static Widget _shimmerNewsCard() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[300],
-          borderRadius: BorderRadius.circular(20),
-        ),
+  // --- Helpers ---
+
+  static Widget _songShimmer() => Shimmer.fromColors(
+    baseColor: Colors.grey[300]!,
+    highlightColor: Colors.grey[100]!,
+    child: Container(
+      height: 180,
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(24),
       ),
-    );
-  }
+    ),
+  );
+
+  static Widget _songCard(dynamic song) => Container(
+    height: 180,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(24),
+      image: DecorationImage(
+        image: NetworkImage(song["artworkUrl100"]),
+        fit: BoxFit.cover,
+      ),
+    ),
+    padding: const EdgeInsets.all(20),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          song["trackName"] ?? "Song",
+          style: GoogleFonts.mulish(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          song["artistName"] ?? "",
+          style: GoogleFonts.mulish(
+            color: Colors.white70,
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+          ),
+        ),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: const Text("Play now", style: TextStyle(color: Colors.black)),
+        ),
+      ],
+    ),
+  );
+
+  static Widget _shimmerNewsCard() => Shimmer.fromColors(
+    baseColor: Colors.grey[300]!,
+    highlightColor: Colors.grey[100]!,
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(20),
+      ),
+    ),
+  );
 
   Widget _sectionWithMagazineGrid(String title, List<Widget> cards) {
     return Column(
@@ -315,27 +403,15 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.mulish(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      const Icon(
-                        Icons.more_vert,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ],
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.mulish(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
                   ),
                   const Spacer(),
                   Text(
