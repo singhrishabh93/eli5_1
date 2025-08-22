@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:eli5/utils/knowledge_colors.dart';
+import 'package:eli5/widgets/knowledege_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -19,7 +19,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   List<Map<String, String>> boredActivities = [];
   List<Map<String, String>> quotes = [];
 
-  bool isLoading = true; // ✅ Single flag to control entire page loading
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -27,7 +27,6 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     _fetchAllData();
   }
 
-  /// ✅ Fetch all data in parallel and wait until complete
   Future<void> _fetchAllData() async {
     await Future.wait([
       fetchUselessFact(),
@@ -36,11 +35,9 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
       fetchBoredActivities(),
       fetchQuotes(),
     ]);
-
     setState(() => isLoading = false);
   }
 
-  /// ✅ Fun Science Facts API
   Future<void> fetchUselessFact() async {
     try {
       List<Map<String, String>> facts = [];
@@ -54,12 +51,9 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         }
       }
       funScienceFacts = facts;
-    } catch (e) {
-      debugPrint("Error fetching facts: $e");
-    }
+    } catch (e) {}
   }
 
-  /// ✅ Today in History
   Future<void> fetchTodayInHistory() async {
     try {
       final now = DateTime.now();
@@ -89,12 +83,9 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         }
         todayInHistory = eventsList;
       }
-    } catch (e) {
-      debugPrint("Error fetching history: $e");
-    }
+    } catch (e) {}
   }
 
-  /// ✅ Trivia API
   Future<void> fetchTrivia() async {
     try {
       final res =
@@ -110,12 +101,9 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         }
         triviaQuestions = triviaList;
       }
-    } catch (e) {
-      debugPrint("Error fetching trivia: $e");
-    }
+    } catch (e) {}
   }
 
-  /// ✅ Bored API
   Future<void> fetchBoredActivities() async {
     try {
       List<Map<String, String>> activities = [];
@@ -128,12 +116,9 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         }
       }
       boredActivities = activities;
-    } catch (e) {
-      debugPrint("Error fetching bored activities: $e");
-    }
+    } catch (e) {}
   }
 
-  /// ✅ Quotes API (fetch multiple times)
   Future<void> fetchQuotes() async {
     try {
       List<Map<String, String>> quoteList = [];
@@ -147,9 +132,29 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         }
       }
       quotes = quoteList;
-    } catch (e) {
-      debugPrint("Error fetching quotes: $e");
-    }
+    } catch (e) {}
+  }
+
+  void _openKnowledgeModal(String type, Map<String, String> data) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.85,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (_, controller) {
+            return KnowledgeModalSheet(
+              type: type,
+              data: data,
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -166,13 +171,13 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
           style: GoogleFonts.mulish(
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            color: const Color(0xffFFFFFF),
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite, color: Color(0xffFFFFFF)),
+            icon: const Icon(Icons.favorite, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -195,28 +200,19 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     children: [
                       _buildSectionTitle("Fun Science Facts"),
-                      _buildHorizontalCards(funScienceFacts),
+                      _buildHorizontalCards(funScienceFacts, "fact"),
 
                       _buildSectionTitle("Today in History"),
                       _buildImageCards(todayInHistory),
 
                       _buildSectionTitle("Trivia Questions"),
-                      _buildHorizontalCards(
-                        triviaQuestions
-                            .map((q) => {"fact": q["question"]!})
-                            .toList(),
-                        isLarge: true,
-                      ),
+                      _buildHorizontalCards(triviaQuestions, "trivia"),
 
                       _buildSectionTitle("Bored Activities"),
-                      _buildHorizontalCards(
-                        boredActivities
-                            .map((a) => {"fact": a["activity"]!})
-                            .toList(),
-                      ),
+                      _buildHorizontalCards(boredActivities, "activity"),
 
                       _buildSectionTitle("Motivational Quotes"),
-                      _buildHorizontalCards(quotes),
+                      _buildHorizontalCards(quotes, "quote"),
                     ],
                   ),
           ),
@@ -225,7 +221,6 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     );
   }
 
-  /// ✅ Shimmer for full page
   Widget _buildFullPageShimmer() {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -288,36 +283,42 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     );
   }
 
-  Widget _buildHorizontalCards(List<Map<String, String>> data,
-      {bool isLarge = false}) {
+  Widget _buildHorizontalCards(List<Map<String, String>> data, String type) {
     return SizedBox(
-      height: isLarge ? 200 : 120,
+      height: 140,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
         itemCount: data.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          return Container(
-            width: isLarge ? 220 : 180,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1.2,
+          return GestureDetector(
+            onTap: () => _openKnowledgeModal(type, data[index]),
+            child: Container(
+              width: 200,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1.2,
+                ),
               ),
-            ),
-            child: Center(
-              child: Text(
-                data[index]["fact"] ?? "",
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.mulish(
-                  fontSize: isLarge ? 18 : 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+              child: Center(
+                child: Text(
+                  data[index]["fact"] ??
+                      data[index]["question"] ??
+                      data[index]["activity"] ??
+                      data[index]["headline"] ??
+                      "",
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.mulish(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -336,52 +337,55 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         itemCount: data.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          return Container(
-            width: 260,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-                width: 1.2,
+          return GestureDetector(
+            onTap: () => _openKnowledgeModal("history", data[index]),
+            child: Container(
+              width: 260,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1.2,
+                ),
               ),
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (data[index]["image"]!.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      data[index]["image"]!,
-                      height: 100,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (data[index]["image"]!.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        data[index]["image"]!,
+                        height: 100,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    data[index]["headline"]!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.mulish(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
-                const SizedBox(height: 8),
-                Text(
-                  data[index]["headline"]!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.mulish(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                  const SizedBox(height: 4),
+                  Text(
+                    data[index]["text"]!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.mulish(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  data[index]["text"]!,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.mulish(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
