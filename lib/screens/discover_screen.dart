@@ -115,9 +115,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.95,
-          minChildSize: 0.8,
-          maxChildSize: 0.95,
+          initialChildSize: 0.80, // start at 1/3 of screen
+          minChildSize: 0.80, // cannot shrink below 1/3
+          maxChildSize: 0.9, // can expand up to half screen if dragged
           expand: false,
           builder: (context, scrollController) {
             return _ArticleDetailSheet(article: article);
@@ -466,42 +466,39 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
   }
 
   Widget _buildArticleText() {
-  String description = widget.article["description"] ?? "";
-  String content = widget.article["content"] ?? "";
+    String description = widget.article["description"] ?? "";
+    String content = widget.article["content"] ?? "";
 
-  // Remove the [+XYZ chars] part
-  bool hasMore = RegExp(r'\[\+\d+ chars\]').hasMatch(content);
-  content = content.replaceAll(RegExp(r'\[\+\d+ chars\]'), '');
+    // Remove the [+XYZ chars] part
+    bool hasMore = RegExp(r'\[\+\d+ chars\]').hasMatch(content);
+    content = content.replaceAll(RegExp(r'\[\+\d+ chars\]'), '');
 
-  return RichText(
-    text: TextSpan(
-      children: [
-        TextSpan(
-          text: "$description\n\n$content",
-          style: GoogleFonts.mulish(
-            fontSize: 14,
-            color: Colors.white70,
-          ),
-        ),
-        if (hasMore || (widget.article["url"]?.isNotEmpty ?? false))
+    return RichText(
+      text: TextSpan(
+        children: [
           TextSpan(
-            text: "Read more",
-            style: GoogleFonts.mulish(
-              fontSize: 14,
-              color: Colors.orange,
-              fontWeight: FontWeight.w600,
-            ),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () {
-                if (widget.article["url"] != null) {
-                  launchUrl(Uri.parse(widget.article["url"]));
-                }
-              },
+            text: "$description\n\n$content",
+            style: GoogleFonts.mulish(fontSize: 14, color: Colors.white70),
           ),
-      ],
-    ),
-  );
-}
+          if (hasMore || (widget.article["url"]?.isNotEmpty ?? false))
+            TextSpan(
+              text: "Read more",
+              style: GoogleFonts.mulish(
+                fontSize: 14,
+                color: Colors.orange,
+                fontWeight: FontWeight.w600,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  if (widget.article["url"] != null) {
+                    launchUrl(Uri.parse(widget.article["url"]));
+                  }
+                },
+            ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -513,14 +510,52 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
       child: Column(
         children: [
           // Drag handle
-          Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 50,
-            height: 5,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(10),
-            ),
+          Stack(
+            children: [
+              // Full width wrapper
+              SizedBox(
+                width: double.infinity,
+                height:
+                    50, // Enough height to hold both drag handle and close icon
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    width: 50,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Close button
+              Positioned(
+                top: 8,
+                right: 12,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context); // Close modal
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow.withOpacity(
+                        0.4,
+                      ), // translucent circle
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
 
           // Scrollable content
