@@ -18,7 +18,7 @@ class HighlightsCache {
 
   static bool get isValid {
     if (lastFetch == null) return false;
-    return DateTime.now().difference(lastFetch!).inMinutes < 10; // cache 10 min
+    return DateTime.now().difference(lastFetch!).inMinutes < 60; // cache 10 min
   }
 }
 

@@ -542,7 +542,7 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.yellow.withOpacity(
+                      color: Colors.white.withOpacity(
                         0.4,
                       ), // translucent circle
                       shape: BoxShape.circle,

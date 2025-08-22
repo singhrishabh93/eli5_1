@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/gemini_service.dart';
@@ -23,20 +24,44 @@ class HistoryChatModal extends StatefulWidget {
   State<HistoryChatModal> createState() => _HistoryChatModalState();
 }
 
-class _HistoryChatModalState extends State<HistoryChatModal> {
+class _HistoryChatModalState extends State<HistoryChatModal>
+    with TickerProviderStateMixin {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   final _scrollController = ScrollController();
   final _textController = TextEditingController();
   final ValueNotifier<String> _selectedSegment = ValueNotifier('five');
+  late AnimationController _gradientController;
+  late AnimationController _rotationController;
 
   bool _isLoading = false;
   late List<Map<String, dynamic>> _messages;
+  String? _lastQuery;
 
   @override
   void initState() {
     super.initState();
+
+    _gradientController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
+
     _messages = List.from(widget.messages);
+  }
+
+  @override
+  void dispose() {
+    _gradientController.dispose();
+    _rotationController.dispose();
+    _scrollController.dispose();
+    _textController.dispose();
+    super.dispose();
   }
 
   Future<void> _appendMessage(Map<String, dynamic> message) async {
@@ -59,6 +84,7 @@ class _HistoryChatModalState extends State<HistoryChatModal> {
 
     setState(() {
       _isLoading = true;
+      _lastQuery = query;
       _messages.add({"role": "user", "message": query});
       _textController.clear();
     });
@@ -124,174 +150,323 @@ class _HistoryChatModalState extends State<HistoryChatModal> {
       initialChildSize: 0.9,
       maxChildSize: 0.95,
       builder: (_, controller) {
-        return Column(
-          children: [
-            const SizedBox(height: 12),
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.95),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              /// 🔹 Header
+              Stack(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        width: 50,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 12,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.4),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close,
+                            color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
-            /// 🔹 Tab switcher
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                height: 50,
+              /// 🔹 Tab switcher
+              Container(
+                height: 60,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.yellowAccent.withOpacity(0.15),
                     width: 1.2,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildSegmentButton("five", "Like I’m 5"),
-                    _buildSegmentButton("fifteen", "Like I’m 15"),
-                    _buildSegmentButton("adult", "Like I’m an Adult"),
-                  ],
+                child: AdvancedSegment(
+                  controller: _selectedSegment,
+                  segments: const {
+                    'five': "Like I’m 5",
+                    'fifteen': "Like I’m 15",
+                    'adult': "Like I’m an Adult",
+                  },
+                  backgroundColor: Colors.transparent,
+                  sliderColor: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(30),
+                  activeStyle: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Mulish',
+                    fontWeight: FontWeight.w600,
+                  ),
+                  inactiveStyle: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: 'Mulish',
+                    fontWeight: FontWeight.w500,
+                  ),
+                  itemPadding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 12,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            /// 🔹 Messages list
-            Expanded(
-              child: ValueListenableBuilder<String>(
-                valueListenable: _selectedSegment,
-                builder: (context, selected, _) {
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = _messages[index];
-                      final isUser = msg["role"] == "user";
-
-                      String text = "";
-                      if (isUser) {
-                        text = msg["message"] ?? "";
-                      } else {
-                        if (selected == "five") {
-                          text = msg["message_five"] ?? "";
-                        } else if (selected == "fifteen") {
-                          text = msg["message_fifteen"] ?? "";
-                        } else {
-                          text = msg["message_adult"] ?? "";
+              /// 🔹 Messages list
+              Expanded(
+                child: ValueListenableBuilder<String>(
+                  valueListenable: _selectedSegment,
+                  builder: (context, selected, _) {
+                    return ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _messages.length + (_isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (_isLoading && index == _messages.length) {
+                          // ✅ Loader like HomeScreen
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8.0, horizontal: 16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                RotationTransition(
+                                  turns: _rotationController,
+                                  child: Image.asset(
+                                    "assets/icons/star.png",
+                                    height: 22,
+                                    width: 22,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Just a sec...",
+                                  style: GoogleFonts.mulish(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
                         }
-                      }
 
-                      if (text.isEmpty) return const SizedBox.shrink();
+                        final msg = _messages[index];
+                        final isUser = msg["role"] == "user";
 
-                      return Align(
-                        alignment: isUser
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 6, horizontal: 12),
-                          padding: const EdgeInsets.all(12),
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.75,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isUser
-                                ? const Color(0xFFFFA775)
-                                : Colors.white.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: MarkdownBody(
-                            data: text,
-                            styleSheet: MarkdownStyleSheet(
-                              p: GoogleFonts.mulish(
-                                color: Colors.white,
-                                fontSize: 14,
+                        String text = "";
+                        if (isUser) {
+                          text = msg["message"] ?? "";
+                        } else {
+                          if (selected == "five") {
+                            text = msg["message_five"] ?? "";
+                          } else if (selected == "fifteen") {
+                            text = msg["message_fifteen"] ?? "";
+                          } else {
+                            text = msg["message_adult"] ?? "";
+                          }
+                        }
+
+                        if (text.isEmpty) return const SizedBox.shrink();
+
+                        return Column(
+                          crossAxisAlignment: isUser
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
+                          children: [
+                            Align(
+                              alignment: isUser
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                                padding: const EdgeInsets.all(12),
+                                constraints: BoxConstraints(
+                                  maxWidth:
+                                      MediaQuery.of(context).size.width * 0.75,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isUser
+                                      ? const Color(0xFFFFA775)
+                                      : Colors.white.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: MarkdownBody(
+                                  data: text,
+                                  styleSheet: MarkdownStyleSheet(
+                                    p: GoogleFonts.mulish(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                    strong: GoogleFonts.mulish(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              strong: GoogleFonts.mulish(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                            ),
+                            if (!isUser) _buildActionRow(text),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              /// 🔹 Input field
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  child: AnimatedBuilder(
+                    animation: _gradientController,
+                    builder: (context, child) {
+                      return Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFFA775),
+                              const Color(0xFFF0CF7B),
+                            ],
+                            stops: const [0, 1.0],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            transform: GradientRotation(
+                              _gradientController.value * 6.28,
+                            ),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(1.5),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _textController,
+                                    enabled: !_isLoading,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    cursorColor: const Color(0xFFF0CF7B),
+                                    decoration: const InputDecoration(
+                                      hintText: "Type your message...",
+                                      hintStyle: TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => _sendMessage(),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: _isLoading ? null : _sendMessage,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 16.0),
+                                    child: Icon(
+                                      FluentIcons.send_20_filled,
+                                      color: _isLoading
+                                          ? Colors.grey
+                                          : const Color(0xFFF0CF7B),
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       );
                     },
-                  );
-                },
-              ),
-            ),
-
-            /// 🔹 Input field
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _textController,
-                        enabled: !_isLoading,
-                        style: const TextStyle(color: Colors.white),
-                        cursorColor: const Color(0xFFF0CF7B),
-                        decoration: InputDecoration(
-                          hintText: "Type your message...",
-                          hintStyle:
-                              GoogleFonts.mulish(color: Colors.white70),
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.08),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: Icon(
-                        FluentIcons.send_20_filled,
-                        color: _isLoading
-                            ? Colors.grey
-                            : const Color(0xFFF0CF7B),
-                      ),
-                      onPressed: _isLoading ? null : _sendMessage,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildSegmentButton(String key, String label) {
-    return ValueListenableBuilder<String>(
-      valueListenable: _selectedSegment,
-      builder: (_, selected, __) {
-        final isActive = selected == key;
-        return GestureDetector(
-          onTap: () => _selectedSegment.value = key,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? Colors.yellowAccent.withOpacity(0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.mulish(
-                color: isActive ? Colors.white : Colors.white70,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+  /// ✅ Action Row (copy, regenerate, share)
+  Widget _buildActionRow(String text) {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(
+            FluentIcons.copy_16_regular,
+            size: 18,
+            color: Color(0xFFFFA775),
           ),
-        );
-      },
+          onPressed: () {
+            if (text.isNotEmpty) {
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Copied to clipboard')),
+              );
+            }
+          },
+        ),
+        IconButton(
+          icon: const Icon(
+            FluentIcons.history_16_filled,
+            size: 18,
+            color: Color(0xFFFFA775),
+          ),
+          onPressed: () {
+            if (_lastQuery != null && !_isLoading) {
+              _sendMessage();
+            }
+          },
+        ),
+        IconButton(
+          icon: const Icon(
+            FluentIcons.share_ios_20_filled,
+            size: 18,
+            color: Color(0xFFFFA775),
+          ),
+          onPressed: () {
+            // TODO: implement share functionality
+          },
+        ),
+      ],
     );
   }
 }
