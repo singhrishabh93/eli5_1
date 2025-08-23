@@ -8,7 +8,11 @@ class KnowledgeModalSheet extends StatefulWidget {
   final String type; // fact, trivia, activity, quote, history
   final Map<String, String> data;
 
-  const KnowledgeModalSheet({required this.type, required this.data, super.key});
+  const KnowledgeModalSheet({
+    required this.type,
+    required this.data,
+    super.key,
+  });
 
   @override
   State<KnowledgeModalSheet> createState() => _KnowledgeModalSheetState();
@@ -96,10 +100,14 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.yellow.withOpacity(0.4),
+                      color: Colors.white.withOpacity(0.4),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ),
               ),
@@ -130,8 +138,8 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                       child: GestureDetector(
                         onTap: () => _loadExplanations(content),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                          height: 50,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(12),
@@ -143,13 +151,18 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Colors.orange),
+                              Image.asset(
+                                "assets/icons/star.png",
+                                height: 18,
+                                width: 18,
+                                color: Colors.orange,
+                              ),
                               const SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 "Explain like I'm 5",
-                                style: TextStyle(
+                                style: GoogleFonts.mulish(
                                   color: Colors.white,
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -191,15 +204,13 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                               backgroundColor: Colors.transparent,
                               sliderColor: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(30),
-                              activeStyle: const TextStyle(
+                              activeStyle: GoogleFonts.mulish(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
-                                fontFamily: 'Mulish',
                               ),
-                              inactiveStyle: const TextStyle(
+                              inactiveStyle: GoogleFonts.mulish(
                                 color: Colors.white70,
                                 fontWeight: FontWeight.w500,
-                                fontFamily: 'Mulish',
                               ),
                               itemPadding: const EdgeInsets.symmetric(
                                 vertical: 10,
@@ -214,8 +225,8 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                               int index = value == 'five'
                                   ? 0
                                   : value == 'fifteen'
-                                      ? 1
-                                      : 2;
+                                  ? 1
+                                  : 2;
                               return Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
@@ -228,7 +239,7 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                                 ),
                                 child: Text(
                                   _explanations[index],
-                                  style: const TextStyle(
+                                  style: GoogleFonts.mulish(
                                     fontSize: 16,
                                     color: Colors.white,
                                     height: 1.5,

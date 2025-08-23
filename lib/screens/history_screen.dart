@@ -26,8 +26,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text("Please log in to see history")),
+      return Scaffold(
+        body: Center(
+          child: Text(
+            "Please log in to see history",
+            style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+          ),
+        ),
       );
     }
 
@@ -49,7 +54,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(FluentIcons.add_16_filled, color: Color(0xffFFFFFF)),
+            icon: const Icon(
+              FluentIcons.add_16_filled,
+              color: Color(0xffFFFFFF),
+            ),
             onPressed: () {},
           ),
         ],
@@ -88,17 +96,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         color: Colors.white70,
                         fontSize: 14,
                       ),
-                      prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.white70,
+                      ),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.08),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 0,
+                        horizontal: 16,
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+                        borderSide: BorderSide(
+                          color: Colors.white.withOpacity(0.15),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                        borderSide: BorderSide(
+                          color: Colors.white.withOpacity(0.3),
+                        ),
                       ),
                     ),
                   ),
@@ -121,38 +139,49 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       final chats = snapshot.data!.docs;
 
                       if (chats.isEmpty) {
-                        return const Center(
+                        return Center(
                           child: Text(
                             "No history yet",
-                            style: TextStyle(color: Colors.white),
+                            style: GoogleFonts.mulish(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
                           ),
                         );
                       }
 
                       final filteredChats = chats.where((doc) {
                         final chat = doc.data() as Map<String, dynamic>;
-                        final messages =
-                            List<Map<String, dynamic>>.from(chat["messages"] ?? []);
+                        final messages = List<Map<String, dynamic>>.from(
+                          chat["messages"] ?? [],
+                        );
 
-                        final preview = messages.firstWhere(
-                          (msg) => msg["role"] == "user",
-                          orElse: () => {"message": "New Chat"},
-                        )["message"] ?? "New Chat";
+                        final preview =
+                            messages.firstWhere(
+                              (msg) => msg["role"] == "user",
+                              orElse: () => {"message": "New Chat"},
+                            )["message"] ??
+                            "New Chat";
 
-                        final aiPreview = messages.firstWhere(
-                          (msg) => msg["role"] == "assistant",
-                          orElse: () => {"message_five": ""},
-                        )["message_five"] ?? "";
+                        final aiPreview =
+                            messages.firstWhere(
+                              (msg) => msg["role"] == "assistant",
+                              orElse: () => {"message_five": ""},
+                            )["message_five"] ??
+                            "";
 
                         return preview.toLowerCase().contains(_searchQuery) ||
                             aiPreview.toLowerCase().contains(_searchQuery);
                       }).toList();
 
                       if (filteredChats.isEmpty) {
-                        return const Center(
+                        return Center(
                           child: Text(
                             "No results found",
-                            style: TextStyle(color: Colors.white70),
+                            style: GoogleFonts.mulish(
+                              color: Colors.white70,
+                              fontSize: 16,
+                            ),
                           ),
                         );
                       }
@@ -170,18 +199,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         itemBuilder: (context, index) {
                           final chatDoc = filteredChats[index];
                           final chat = chatDoc.data() as Map<String, dynamic>;
-                          final messages =
-                              List<Map<String, dynamic>>.from(chat["messages"] ?? []);
+                          final messages = List<Map<String, dynamic>>.from(
+                            chat["messages"] ?? [],
+                          );
 
-                          final preview = messages.firstWhere(
-                            (msg) => msg["role"] == "user",
-                            orElse: () => {"message": "New Chat"},
-                          )["message"] ?? "New Chat";
+                          final preview =
+                              messages.firstWhere(
+                                (msg) => msg["role"] == "user",
+                                orElse: () => {"message": "New Chat"},
+                              )["message"] ??
+                              "New Chat";
 
-                          final aiPreview = messages.firstWhere(
-                            (msg) => msg["role"] == "assistant",
-                            orElse: () => {"message_five": ""},
-                          )["message_five"] ?? "";
+                          final aiPreview =
+                              messages.firstWhere(
+                                (msg) => msg["role"] == "assistant",
+                                orElse: () => {"message_five": ""},
+                              )["message_five"] ??
+                              "";
 
                           final createdAt = chat["createdAt"] != null
                               ? (chat["createdAt"] as Timestamp).toDate()
@@ -195,7 +229,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -230,8 +266,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   /// 🔸 Time row
                                   Row(
                                     children: [
-                                      const Icon(Icons.access_time,
-                                          size: 14, color: Colors.white70),
+                                      const Icon(
+                                        Icons.access_time,
+                                        size: 14,
+                                        color: Colors.white70,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         timeago.format(createdAt),

@@ -10,11 +10,8 @@ class ChatModal extends StatefulWidget {
   final GeminiService geminiService;
   final String? initialMessage;
 
-  const ChatModal({
-    Key? key,
-    required this.geminiService,
-    this.initialMessage,
-  }) : super(key: key);
+  const ChatModal({Key? key, required this.geminiService, this.initialMessage})
+    : super(key: key);
 
   @override
   State<ChatModal> createState() => _ChatModalState();
@@ -117,14 +114,12 @@ class _ChatModalState extends State<ChatModal> {
                   backgroundColor: Colors.transparent,
                   sliderColor: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(30),
-                  activeStyle: const TextStyle(
+                  activeStyle: GoogleFonts.mulish(
                     color: Colors.white,
-                    fontFamily: 'Mulish',
                     fontWeight: FontWeight.w600,
                   ),
-                  inactiveStyle: const TextStyle(
+                  inactiveStyle: GoogleFonts.mulish(
                     color: Colors.white70,
-                    fontFamily: 'Mulish',
                     fontWeight: FontWeight.w500,
                   ),
                   itemPadding: const EdgeInsets.symmetric(
@@ -144,8 +139,8 @@ class _ChatModalState extends State<ChatModal> {
                     int index = value == 'five'
                         ? 0
                         : value == 'fifteen'
-                            ? 1
-                            : 2;
+                        ? 1
+                        : 2;
 
                     if (_isLoading[index] && _explanations[index].isEmpty) {
                       return const Center(
@@ -215,7 +210,12 @@ class _ChatModalState extends State<ChatModal> {
                 if (text.isNotEmpty) {
                   Clipboard.setData(ClipboardData(text: text));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied to clipboard')),
+                    SnackBar(
+                      content: Text(
+                        'Copied to clipboard',
+                        style: GoogleFonts.mulish(),
+                      ),
+                    ),
                   );
                 }
               },

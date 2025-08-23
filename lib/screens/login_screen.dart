@@ -33,7 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign in failed. Please try again.')),
+          SnackBar(
+            content: Text(
+              'Sign in failed. Please try again.',
+              style: GoogleFonts.mulish(color: Colors.white),
+            ),
+          ),
         );
       }
       setState(() => _isLoading = false);
@@ -46,9 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) => const BottomNavBar(initialIndex: 0),
-      ),
+      MaterialPageRoute(builder: (_) => const BottomNavBar(initialIndex: 0)),
     );
   }
 
@@ -58,8 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Image.asset('assets/bg3.png',
-              fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+          Image.asset(
+            'assets/bg3.png',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -72,7 +79,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Lottie.asset(
                         'assets/flower.json',
                         errorBuilder: (context, error, stackTrace) {
-                          return const Text('AI animation placeholder');
+                          return Text(
+                            'AI animation placeholder',
+                            style: GoogleFonts.mulish(color: Colors.white),
+                          );
                         },
                       ),
                     ),
@@ -123,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             label: Text(
                               "Continue with Google",
-                              style: GoogleFonts.roboto(
+                              style: GoogleFonts.mulish(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black.withOpacity(0.54),

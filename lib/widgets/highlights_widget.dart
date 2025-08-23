@@ -187,7 +187,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
       children: [
         Text(
           "It's great to see you",
-          style: GoogleFonts.mulish(fontSize: 22, fontWeight: FontWeight.w800),
+          style: GoogleFonts.mulish(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
         ),
         const SizedBox(height: 16),
 
@@ -392,7 +392,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
           ),
-          child: const Text("Play now", style: TextStyle(color: Colors.black)),
+          child: Text("Play now", style: GoogleFonts.mulish(color: Colors.black)),
         ),
       ],
     ),
@@ -404,7 +404,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
       children: [
         Text(
           title,
-          style: GoogleFonts.mulish(fontSize: 20, fontWeight: FontWeight.w700),
+          style: GoogleFonts.mulish(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
         ),
         const SizedBox(height: 12),
         Row(

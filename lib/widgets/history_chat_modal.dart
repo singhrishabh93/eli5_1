@@ -74,8 +74,8 @@ class _HistoryChatModalState extends State<HistoryChatModal>
         .collection("chats")
         .doc(widget.chatId)
         .update({
-      "messages": FieldValue.arrayUnion([message]),
-    });
+          "messages": FieldValue.arrayUnion([message]),
+        });
   }
 
   Future<void> _sendMessage() async {
@@ -187,8 +187,11 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                           color: Colors.white.withOpacity(0.4),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.close,
-                            color: Colors.white, size: 18),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -217,16 +220,15 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                   backgroundColor: Colors.transparent,
                   sliderColor: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(30),
-                  activeStyle: const TextStyle(
+                  activeStyle: GoogleFonts.mulish(
                     color: Colors.white,
-                    fontFamily: 'Mulish',
                     fontWeight: FontWeight.w600,
                   ),
-                  inactiveStyle: const TextStyle(
+                  inactiveStyle: GoogleFonts.mulish(
                     color: Colors.white70,
-                    fontFamily: 'Mulish',
                     fontWeight: FontWeight.w500,
                   ),
+
                   itemPadding: const EdgeInsets.symmetric(
                     vertical: 10,
                     horizontal: 12,
@@ -248,7 +250,9 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                           // ✅ Loader like HomeScreen
                           return Padding(
                             padding: const EdgeInsets.symmetric(
-                                vertical: 8.0, horizontal: 16),
+                              vertical: 8.0,
+                              horizontal: 16,
+                            ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -303,8 +307,10 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                                   ? Alignment.centerRight
                                   : Alignment.centerLeft,
                               child: Container(
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 12,
+                                ),
                                 padding: const EdgeInsets.all(12),
                                 constraints: BoxConstraints(
                                   maxWidth:
@@ -378,20 +384,22 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                                   child: TextField(
                                     controller: _textController,
                                     enabled: !_isLoading,
-                                    style: const TextStyle(
+                                    style: GoogleFonts.mulish(
                                       color: Colors.white,
                                       fontSize: 16,
                                     ),
                                     cursorColor: const Color(0xFFF0CF7B),
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       hintText: "Type your message...",
-                                      hintStyle: TextStyle(
+                                      hintStyle: GoogleFonts.mulish(
                                         color: Colors.white70,
+                                        fontSize: 16,
                                       ),
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                          ),
                                     ),
                                     onSubmitted: (_) => _sendMessage(),
                                   ),
@@ -439,7 +447,13 @@ class _HistoryChatModalState extends State<HistoryChatModal>
             if (text.isNotEmpty) {
               Clipboard.setData(ClipboardData(text: text));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Copied to clipboard')),
+                SnackBar(
+                  content: Text(
+                    'Copied to clipboard',
+                    style: GoogleFonts.mulish(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.black87,
+                ),
               );
             }
           },

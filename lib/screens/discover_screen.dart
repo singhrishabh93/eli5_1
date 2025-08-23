@@ -624,9 +624,9 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                                 color: Colors.orange,
                               ),
                               const SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 "Explain like I'm 5",
-                                style: TextStyle(
+                                style: GoogleFonts.mulish(
                                   color: Colors.white,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -673,14 +673,12 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                               backgroundColor: Colors.transparent,
                               sliderColor: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(30),
-                              activeStyle: const TextStyle(
+                              activeStyle: GoogleFonts.mulish(
                                 color: Colors.white,
-                                fontFamily: 'Mulish',
                                 fontWeight: FontWeight.w600,
                               ),
-                              inactiveStyle: const TextStyle(
+                              inactiveStyle: GoogleFonts.mulish(
                                 color: Colors.white70,
-                                fontFamily: 'Mulish',
                                 fontWeight: FontWeight.w500,
                               ),
                               itemPadding: const EdgeInsets.symmetric(
@@ -714,7 +712,7 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                                     _explanations[index].isEmpty
                                         ? "No explanation yet."
                                         : _explanations[index],
-                                    style: const TextStyle(
+                                    style: GoogleFonts.mulish(
                                       fontSize: 16,
                                       height: 1.4,
                                       color: Colors.white,

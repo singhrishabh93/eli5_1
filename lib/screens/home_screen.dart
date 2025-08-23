@@ -323,16 +323,15 @@ class _HomeScreenState extends State<HomeScreen>
                       backgroundColor: Colors.transparent,
                       sliderColor: Colors.yellowAccent.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(30),
-                      activeStyle: const TextStyle(
+                      activeStyle: GoogleFonts.mulish(
                         color: Colors.white,
-                        fontFamily: 'Mulish',
                         fontWeight: FontWeight.w600,
                       ),
-                      inactiveStyle: const TextStyle(
+                      inactiveStyle: GoogleFonts.mulish(
                         color: Colors.white70,
-                        fontFamily: 'Mulish',
                         fontWeight: FontWeight.w500,
                       ),
+
                       itemPadding: const EdgeInsets.symmetric(
                         vertical: 10,
                         horizontal: 12,
@@ -556,12 +555,10 @@ class _HomeScreenState extends State<HomeScreen>
                                                         child: Text(
                                                           " ${_wearSuggestions[_nextSuggestionIndex]}",
                                                           style:
-                                                              const TextStyle(
+                                                              GoogleFonts.mulish(
                                                                 color: Colors
                                                                     .white,
                                                                 fontSize: 16,
-                                                                fontFamily:
-                                                                    "SatoshiR",
                                                                 fontStyle:
                                                                     FontStyle
                                                                         .italic,
@@ -580,22 +577,20 @@ class _HomeScreenState extends State<HomeScreen>
                                       controller: _searchController,
                                       enabled:
                                           !_isLoading, // ⬅️ disable input while waiting
-                                      style: const TextStyle(
-                                        // This controls the typed text color
+                                      style: GoogleFonts.mulish(
                                         color: Colors.white,
                                         fontSize: 16,
-                                        fontFamily: "SatoshiR",
                                       ),
-                                      cursorColor: Color(0xffFF0CF7B),
-                                      decoration: const InputDecoration(
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 0,
-                                        ),
+                                      cursorColor: const Color(0xffFF0CF7B),
+                                      decoration: InputDecoration(
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 0,
+                                            ),
                                         border: InputBorder.none,
-                                        hintStyle: TextStyle(
+                                        hintStyle: GoogleFonts.mulish(
                                           color: Colors.white,
                                           fontSize: 16,
-                                          fontFamily: "SatoshiR",
                                         ),
                                       ),
                                       onSubmitted: (_) => !_isLoading
@@ -651,7 +646,12 @@ class _HomeScreenState extends State<HomeScreen>
             if (text.isNotEmpty) {
               Clipboard.setData(ClipboardData(text: text));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Copied to clipboard')),
+                SnackBar(
+                  content: Text(
+                    'Copied to clipboard',
+                    style: GoogleFonts.mulish(),
+                  ),
+                ),
               );
             }
           },

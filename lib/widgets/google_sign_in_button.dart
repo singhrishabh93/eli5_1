@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class GoogleSignInButton extends StatelessWidget {
   final VoidCallback onPressed;
-  
-  const GoogleSignInButton({
-    Key? key,
-    required this.onPressed,
-  }) : super(key: key);
-  
+
+  const GoogleSignInButton({Key? key, required this.onPressed})
+    : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -51,9 +50,9 @@ class GoogleSignInButton extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 // Sign in text
-                const Text(
+                Text(
                   'Sign in with Google',
-                  style: TextStyle(
+                  style: GoogleFonts.mulish(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
