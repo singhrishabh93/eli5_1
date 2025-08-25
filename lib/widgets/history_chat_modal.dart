@@ -33,6 +33,8 @@ class _HistoryChatModalState extends State<HistoryChatModal>
   final ValueNotifier<String> _selectedSegment = ValueNotifier('five');
   late AnimationController _gradientController;
   late AnimationController _rotationController;
+  bool _isUserTyping = false;
+  final FocusNode _focusNode = FocusNode();
 
   bool _isLoading = false;
   late List<Map<String, dynamic>> _messages;
@@ -41,6 +43,12 @@ class _HistoryChatModalState extends State<HistoryChatModal>
   @override
   void initState() {
     super.initState();
+
+    _textController.addListener(() {
+      setState(() {
+        _isUserTyping = _textController.text.trim().isNotEmpty;
+      });
+    });
 
     _gradientController = AnimationController(
       vsync: this,
@@ -57,6 +65,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _gradientController.dispose();
     _rotationController.dispose();
     _scrollController.dispose();
@@ -347,8 +356,14 @@ class _HistoryChatModalState extends State<HistoryChatModal>
               ),
 
               /// 🔹 Input field
-              SafeArea(
-                top: false,
+              AnimatedPadding(
+                duration: const Duration(milliseconds: 300),
+                padding: EdgeInsets.only(
+                  left: 0,
+                  right: 0,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+                  top: 4,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                   child: AnimatedBuilder(
@@ -380,6 +395,20 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                             ),
                             child: Row(
                               children: [
+                                const SizedBox(width: 16),
+                                GestureDetector(
+                                  onTap: () {
+                                    // Handle star icon click
+                                  },
+                                  child: Image.asset(
+                                    "assets/icons/star.png",
+                                    height: 22,
+                                    width: 22,
+                                    color: Colors
+                                        .orange, // Match your HomeScreen color
+                                  ),
+                                ),
+                                // const SizedBox(width: 8),
                                 Expanded(
                                   child: TextField(
                                     controller: _textController,
@@ -404,18 +433,38 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                                     onSubmitted: (_) => _sendMessage(),
                                   ),
                                 ),
-                                GestureDetector(
-                                  onTap: _isLoading ? null : _sendMessage,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 16.0),
-                                    child: Icon(
-                                      FluentIcons.send_20_filled,
-                                      color: _isLoading
-                                          ? Colors.grey
-                                          : const Color(0xFFF0CF7B),
-                                      size: 24,
-                                    ),
-                                  ),
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  child: _isUserTyping
+                                      ? GestureDetector(
+                                          key: const ValueKey('arrowButton'),
+                                          onTap: _isLoading
+                                              ? null
+                                              : _sendMessage,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 12.0,
+                                            ),
+                                            child: Container(
+                                              width: 38,
+                                              height: 38,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: _isLoading
+                                                    ? Colors.grey
+                                                    : Colors.orange,
+                                              ),
+                                              child: const Icon(
+                                                FluentIcons.arrow_up_12_regular,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : const SizedBox(
+                                          width: 12,
+                                        ), // keeps layout aligned
                                 ),
                               ],
                             ),
@@ -458,28 +507,28 @@ class _HistoryChatModalState extends State<HistoryChatModal>
             }
           },
         ),
-        IconButton(
-          icon: const Icon(
-            FluentIcons.history_16_filled,
-            size: 18,
-            color: Color(0xFFFFA775),
-          ),
-          onPressed: () {
-            if (_lastQuery != null && !_isLoading) {
-              _sendMessage();
-            }
-          },
-        ),
-        IconButton(
-          icon: const Icon(
-            FluentIcons.share_ios_20_filled,
-            size: 18,
-            color: Color(0xFFFFA775),
-          ),
-          onPressed: () {
-            // TODO: implement share functionality
-          },
-        ),
+        // IconButton(
+        //   icon: const Icon(
+        //     FluentIcons.history_16_filled,
+        //     size: 18,
+        //     color: Color(0xFFFFA775),
+        //   ),
+        //   onPressed: () {
+        //     if (_lastQuery != null && !_isLoading) {
+        //       _sendMessage();
+        //     }
+        //   },
+        // ),
+        // IconButton(
+        //   icon: const Icon(
+        //     FluentIcons.share_ios_20_filled,
+        //     size: 18,
+        //     color: Color(0xFFFFA775),
+        //   ),
+        //   onPressed: () {
+        //     // TODO: implement share functionality
+        //   },
+        // ),
       ],
     );
   }

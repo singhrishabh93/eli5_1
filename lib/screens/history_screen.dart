@@ -29,7 +29,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return Scaffold(
         body: Center(
           child: Text(
-            "Please log in to see history",
+            "No History",
             style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
           ),
         ),
@@ -53,13 +53,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(
-              FluentIcons.add_16_filled,
-              color: Color(0xffFFFFFF),
-            ),
-            onPressed: () {},
-          ),
+          // IconButton(
+          //   icon: const Icon(
+          //     FluentIcons.add_16_filled,
+          //     color: Color(0xffFFFFFF),
+          //   ),
+          //   onPressed: () {},
+          // ),
         ],
       ),
       body: Stack(

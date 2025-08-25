@@ -176,10 +176,10 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite, color: Colors.white),
-            onPressed: () {},
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.favorite, color: Colors.white),
+          //   onPressed: () {},
+          // ),
         ],
       ),
       body: Stack(

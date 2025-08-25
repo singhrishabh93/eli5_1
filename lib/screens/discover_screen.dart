@@ -289,9 +289,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         itemCount: articles.length + (isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == articles.length) {
-                            return const Padding(
+                            return Padding(
                               padding: EdgeInsets.all(16),
-                              child: Center(child: CircularProgressIndicator()),
+                              child: Center(child: Center(
+                        child: Lottie.asset(
+                                "assets/searching.json",
+                                width: 150,
+                                height: 150,
+                              )
+                      ),),
                             );
                           }
                           final article = articles[index];

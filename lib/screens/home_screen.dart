@@ -575,8 +575,8 @@ class _HomeScreenState extends State<HomeScreen>
                                       ),
                                     TextField(
                                       controller: _searchController,
-                                      enabled:
-                                          !_isLoading, // ⬅️ disable input while waiting
+                                      // enabled:
+                                      //     !_isLoading, // ⬅️ disable input while waiting
                                       style: GoogleFonts.mulish(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -600,22 +600,45 @@ class _HomeScreenState extends State<HomeScreen>
                                   ],
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: _isLoading
-                                    ? null
-                                    : _getExplanation, // ⬅️ disable tap
-                                child: Padding(
-                                  padding: EdgeInsets.only(right: 16.0),
-                                  child: Icon(
-                                    FluentIcons.send_20_filled,
-                                    color: _isLoading
-                                        ? Colors.grey
-                                        : const Color(
-                                            0xFFF0CF7B,
-                                          ), // ⬅️ grey out when disabled
-                                    size: 24,
-                                  ),
-                                ),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                transitionBuilder: (child, animation) =>
+                                    FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    ),
+                                child: _isUserTyping
+                                    ? GestureDetector(
+                                        key: const ValueKey('arrow'),
+                                        onTap: _isLoading
+                                            ? null
+                                            : _getExplanation,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 12.0,
+                                          ),
+                                          child: Container(
+                                            width: 38,
+                                            height: 38,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: _isLoading
+                                                  ? Colors.grey
+                                                  : Colors.orange,
+                                            ),
+                                            child: Icon(
+                                              FluentIcons.arrow_up_12_regular,
+                                              color: Colors.white,
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox(
+                                        key: ValueKey('empty'),
+                                        width: 38,
+                                        height: 38,
+                                      ),
                               ),
                             ],
                           ),
