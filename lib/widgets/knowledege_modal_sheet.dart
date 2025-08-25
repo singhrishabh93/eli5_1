@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
+import 'package:lottie/lottie.dart';
 import '../services/gemini_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -174,10 +175,12 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                     const SizedBox(height: 16),
 
                     if (_isFetchingExplanations)
-                      const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFFFA775),
-                        ),
+                      Center(
+                        child: Lottie.asset(
+                                "assets/searching.json",
+                                width: 150,
+                                height: 150,
+                              )
                       ),
 
                     if (_hasExplanation)

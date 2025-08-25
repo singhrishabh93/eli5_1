@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/gemini_service.dart';
@@ -640,12 +641,14 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                     const SizedBox(height: 16),
 
                     if (_isFetchingExplanations)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.all(16),
                         child: Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFFFA775),
-                          ),
+                          child: Lottie.asset(
+                                "assets/searching.json",
+                                width: 150,
+                                height: 150,
+                              )
                         ),
                       ),
 
