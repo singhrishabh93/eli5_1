@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
+import 'package:eli5/widgets/podcast_player_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -158,23 +159,18 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
   }
 
   void _showSongPlayer(BuildContext context, dynamic song) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PodcastPlayerScreen(
+        audioUrl: song["previewUrl"],
+        title: song["trackName"] ?? "Unknown",
+        subtitle: song["artistName"] ?? "",
+        imageUrl: song["artworkUrl100"] ?? "https://picsum.photos/200",
       ),
-      builder: (context) {
-        return PodcastPlayerModal(
-          audioUrl: song["previewUrl"],
-          title: song["trackName"] ?? "Unknown",
-          subtitle: song["artistName"] ?? "",
-          imageUrl: song["artworkUrl100"] ?? "https://picsum.photos/200",
-        );
-      },
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
