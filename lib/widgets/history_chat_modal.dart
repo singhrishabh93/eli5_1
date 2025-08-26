@@ -365,7 +365,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                   top: 4,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
                   child: AnimatedBuilder(
                     animation: _gradientController,
                     builder: (context, child) {

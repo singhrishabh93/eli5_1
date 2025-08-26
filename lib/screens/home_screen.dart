@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eli5/widgets/animated_text.dart';
 import 'package:eli5/widgets/appbar.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/gemini_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? initialQuery;
@@ -150,6 +152,18 @@ class _HomeScreenState extends State<HomeScreen>
     _currentChatId = chatDoc.id;
   }
 
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _appendMessage(Map<String, dynamic> message) async {
     final user = _auth.currentUser;
     if (user == null || _currentChatId == null) return;
@@ -166,6 +180,13 @@ class _HomeScreenState extends State<HomeScreen>
 
   /// ✅ Modified to keep old messages and append new response
   Future<void> _getExplanation() async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      FocusScope.of(context).unfocus(); // ✅ Hide keyboard first
+      await Future.delayed(const Duration(milliseconds: 100)); // ✅ Give time
+      _showOfflineDialog();
+      return;
+    }
     final query = _searchController.text.trim();
 
     // ✅ Use _lastQuery if input is empty (for regenerate)
@@ -705,7 +726,16 @@ class _HomeScreenState extends State<HomeScreen>
         SizedBox(
           height: 36,
           child: GestureDetector(
-            onTap: () => _openChatModal(initialMessage: text),
+            onTap: () async {
+              bool isConnected = await _checkInternetConnection();
+              if (!isConnected) {
+                FocusScope.of(context).unfocus();
+                await Future.delayed(const Duration(milliseconds: 100));
+                _showOfflineDialog();
+                return;
+              }
+              _openChatModal(initialMessage: text);
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
@@ -740,6 +770,69 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ],
+    );
+  }
+
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await _checkInternetConnection()) {
+                      _getExplanation();
+                    } else {
+                      _showOfflineDialog();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
