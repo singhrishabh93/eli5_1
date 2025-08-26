@@ -75,7 +75,14 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("Now Playing"),
+        title: Text(
+          "Now Playing",
+          style: GoogleFonts.mulish(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
@@ -118,7 +125,7 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
             Slider(
               value: _currentPosition.inSeconds.toDouble(),
               max: _totalDuration.inSeconds.toDouble(),
-              activeColor: Colors.purple,
+              activeColor: Color(0xFFFFA775),
               inactiveColor: Colors.white24,
               onChanged: (value) {
                 _player.seek(Duration(seconds: value.toInt()));
@@ -127,10 +134,14 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_formatDuration(_currentPosition),
-                    style: const TextStyle(color: Colors.white70)),
-                Text(_formatDuration(_totalDuration),
-                    style: const TextStyle(color: Colors.white70)),
+                Text(
+                  _formatDuration(_currentPosition),
+                  style: GoogleFonts.mulish(color: Colors.white70, fontSize: 12),
+                ),
+                Text(
+                  _formatDuration(_totalDuration),
+                  style: GoogleFonts.mulish(color: Colors.white70, fontSize: 12),
+                ),
               ],
             ),
 

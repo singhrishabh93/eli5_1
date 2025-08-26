@@ -4,6 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 import '../services/gemini_service.dart';
 
 class ChatModal extends StatefulWidget {
@@ -70,9 +71,9 @@ class _ChatModalState extends State<ChatModal> {
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.9,
-      maxChildSize: 0.95,
-      minChildSize: 0.6,
+      initialChildSize: 0.80,
+      maxChildSize: 0.9,
+      minChildSize: 0.80,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
@@ -82,15 +83,52 @@ class _ChatModalState extends State<ChatModal> {
           child: Column(
             children: [
               // Drag handle
-              Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 50,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(10),
+              Stack(
+                children: [
+                 SizedBox(
+                width: double.infinity,
+                height:
+                    50, // Enough height to hold both drag handle and close icon
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    width: 50,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
               ),
+
+              // Close button
+              Positioned(
+                top: 8,
+                right: 12,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context); // Close modal
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(
+                        0.4,
+                      ), // translucent circle
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
 
               // ✅ SAME AdvancedSegment as HomeScreen
               Container(
@@ -143,10 +181,12 @@ class _ChatModalState extends State<ChatModal> {
                         : 2;
 
                     if (_isLoading[index] && _explanations[index].isEmpty) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFFFA775),
-                        ),
+                      return Center(
+                        child: Lottie.asset(
+                                "assets/searching.json",
+                                width: 150,
+                                height: 150,
+                              )
                       );
                     }
 
