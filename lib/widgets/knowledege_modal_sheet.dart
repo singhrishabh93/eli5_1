@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:lottie/lottie.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import '../services/gemini_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -26,9 +29,102 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
   final List<String> _explanations = ["", "", ""];
   bool _isFetchingExplanations = false;
   bool _hasExplanation = false;
+  bool isOffline = false;
+
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await _checkInternetConnection()) {
+                      setState(() {
+                        isOffline = false;
+                      });
+                      _loadExplanations(_getDisplayText());
+                    } else {
+                      _showOfflineDialog();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _loadExplanations(String content) async {
-    setState(() => _isFetchingExplanations = true);
+    // Check internet connection before proceeding
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      setState(() {
+        isOffline = true;
+      });
+      _showOfflineDialog();
+      return;
+    }
+
+    setState(() {
+      _isFetchingExplanations = true;
+      isOffline = false;
+    });
+
     try {
       final results = await _geminiService.fetchExplanations(content);
       setState(() {
@@ -38,11 +134,25 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
         _hasExplanation = true;
       });
     } catch (e) {
-      setState(() {
-        _explanations[0] = "Error: $e";
-      });
+      // Check if the error is due to network issues
+      bool isStillConnected = await _checkInternetConnection();
+      if (!isStillConnected) {
+        setState(() {
+          isOffline = true;
+        });
+        _showOfflineDialog();
+      } else {
+        setState(() {
+          _explanations[0] = "Error: $e";
+          _explanations[1] = "Error: $e";
+          _explanations[2] = "Error: $e";
+          _hasExplanation = true;
+        });
+      }
     } finally {
-      setState(() => _isFetchingExplanations = false);
+      setState(() {
+        _isFetchingExplanations = false;
+      });
     }
   }
 
@@ -137,7 +247,14 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                     // Explain Button
                     Center(
                       child: GestureDetector(
-                        onTap: () => _loadExplanations(content),
+                        onTap: () async {
+                          bool isConnected = await _checkInternetConnection();
+                          if (!isConnected) {
+                            _showOfflineDialog();
+                            return;
+                          }
+                          _loadExplanations(content);
+                        },
                         child: Container(
                           height: 50,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -175,12 +292,15 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                     const SizedBox(height: 16),
 
                     if (_isFetchingExplanations)
-                      Center(
-                        child: Lottie.asset(
-                                "assets/searching.json",
-                                width: 150,
-                                height: 150,
-                              )
+                      Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: Lottie.asset(
+                            "assets/searching.json",
+                            width: 150,
+                            height: 150,
+                          ),
+                        ),
                       ),
 
                     if (_hasExplanation)
@@ -200,9 +320,9 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                             child: AdvancedSegment(
                               controller: _selectedSegment,
                               segments: const {
-                                'five': "Like I’m 5",
-                                'fifteen': "Like I’m 15",
-                                'adult': "Like I’m an Adult",
+                                'five': "Like I'm 5",
+                                'fifteen': "Like I'm 15",
+                                'adult': "Like I'm an Adult",
                               },
                               backgroundColor: Colors.transparent,
                               sliderColor: Colors.white.withOpacity(0.2),
@@ -221,7 +341,6 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
                           ValueListenableBuilder<String>(
                             valueListenable: _selectedSegment,
                             builder: (context, value, _) {
@@ -230,22 +349,28 @@ class _KnowledgeModalSheetState extends State<KnowledgeModalSheet> {
                                   : value == 'fifteen'
                                   ? 1
                                   : 2;
-                              return Container(
+
+                              return Padding(
                                 padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.15),
-                                    width: 1.2,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.15),
+                                      width: 1.2,
+                                    ),
                                   ),
-                                ),
-                                child: Text(
-                                  _explanations[index],
-                                  style: GoogleFonts.mulish(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                    height: 1.5,
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    _explanations[index].isEmpty
+                                        ? "No explanation yet."
+                                        : _explanations[index],
+                                    style: GoogleFonts.mulish(
+                                      fontSize: 16,
+                                      height: 1.4,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               );

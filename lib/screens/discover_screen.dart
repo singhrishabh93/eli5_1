@@ -271,6 +271,30 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               textAlign: TextAlign.center,
               style: GoogleFonts.mulish(color: Colors.white70, fontSize: 14),
             ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () async {
+                await _checkConnectivityAndFetch();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 24,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Try again',
+                  style: GoogleFonts.mulish(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

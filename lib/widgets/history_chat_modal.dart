@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/gemini_service.dart';
 
 class HistoryChatModal extends StatefulWidget {
@@ -73,6 +75,81 @@ class _HistoryChatModalState extends State<HistoryChatModal>
     super.dispose();
   }
 
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await _checkInternetConnection()) {
+                      _sendMessage();
+                    } else {
+                      _showOfflineDialog();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _appendMessage(Map<String, dynamic> message) async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -88,6 +165,14 @@ class _HistoryChatModalState extends State<HistoryChatModal>
   }
 
   Future<void> _sendMessage() async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      FocusScope.of(context).unfocus(); // Hide keyboard first
+      await Future.delayed(const Duration(milliseconds: 100)); // Give time
+      _showOfflineDialog();
+      return;
+    }
+
     final query = _textController.text.trim();
     if (query.isEmpty || _isLoading) return;
 
@@ -166,7 +251,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
           ),
           child: Column(
             children: [
-              /// 🔹 Header
+              /// Header
               Stack(
                 children: [
                   SizedBox(
@@ -207,7 +292,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                 ],
               ),
 
-              /// 🔹 Tab switcher
+              /// Tab switcher
               Container(
                 height: 60,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -222,9 +307,9 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                 child: AdvancedSegment(
                   controller: _selectedSegment,
                   segments: const {
-                    'five': "Like I’m 5",
-                    'fifteen': "Like I’m 15",
-                    'adult': "Like I’m an Adult",
+                    'five': "Like I'm 5",
+                    'fifteen': "Like I'm 15",
+                    'adult': "Like I'm an Adult",
                   },
                   backgroundColor: Colors.transparent,
                   sliderColor: Colors.white.withOpacity(0.2),
@@ -246,7 +331,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
               ),
               const SizedBox(height: 12),
 
-              /// 🔹 Messages list
+              /// Messages list
               Expanded(
                 child: ValueListenableBuilder<String>(
                   valueListenable: _selectedSegment,
@@ -256,7 +341,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                       itemCount: _messages.length + (_isLoading ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (_isLoading && index == _messages.length) {
-                          // ✅ Loader like HomeScreen
+                          // Loader like HomeScreen
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               vertical: 8.0,
@@ -355,7 +440,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                 ),
               ),
 
-              /// 🔹 Input field
+              /// Input field
               AnimatedPadding(
                 duration: const Duration(milliseconds: 300),
                 padding: EdgeInsets.only(
@@ -365,7 +450,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                   top: 4,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
                   child: AnimatedBuilder(
                     animation: _gradientController,
                     builder: (context, child) {
@@ -404,11 +489,9 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                                     "assets/icons/star.png",
                                     height: 22,
                                     width: 22,
-                                    color: Colors
-                                        .orange, // Match your HomeScreen color
+                                    color: Colors.orange,
                                   ),
                                 ),
-                                // const SizedBox(width: 8),
                                 Expanded(
                                   child: TextField(
                                     controller: _textController,
@@ -464,7 +547,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
                                         )
                                       : const SizedBox(
                                           width: 12,
-                                        ), // keeps layout aligned
+                                        ),
                                 ),
                               ],
                             ),
@@ -482,7 +565,7 @@ class _HistoryChatModalState extends State<HistoryChatModal>
     );
   }
 
-  /// ✅ Action Row (copy, regenerate, share)
+  /// Action Row (copy, regenerate, share)
   Widget _buildActionRow(String text) {
     return Row(
       children: [
@@ -507,28 +590,6 @@ class _HistoryChatModalState extends State<HistoryChatModal>
             }
           },
         ),
-        // IconButton(
-        //   icon: const Icon(
-        //     FluentIcons.history_16_filled,
-        //     size: 18,
-        //     color: Color(0xFFFFA775),
-        //   ),
-        //   onPressed: () {
-        //     if (_lastQuery != null && !_isLoading) {
-        //       _sendMessage();
-        //     }
-        //   },
-        // ),
-        // IconButton(
-        //   icon: const Icon(
-        //     FluentIcons.share_ios_20_filled,
-        //     size: 18,
-        //     color: Color(0xFFFFA775),
-        //   ),
-        //   onPressed: () {
-        //     // TODO: implement share functionality
-        //   },
-        // ),
       ],
     );
   }

@@ -1,14 +1,17 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eli5/services/gemini_service.dart';
 import 'package:eli5/widgets/history_chat_modal.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
@@ -21,10 +24,189 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   String _searchQuery = "";
+  bool _isOffline = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInternetConnection();
+  }
+
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      setState(() {
+        _isOffline = true;
+      });
+      return false;
+    }
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      final isConnected = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      setState(() {
+        _isOffline = !isConnected;
+      });
+      return isConnected;
+    } catch (_) {
+      setState(() {
+        _isOffline = true;
+      });
+      return false;
+    }
+  }
+
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _checkInternetConnection();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
+    
+    // Show offline state if no internet connection
+    if (_isOffline) {
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.black.withOpacity(0),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            "Library",
+            style: GoogleFonts.mulish(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xffFFFFFF),
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: Stack(
+          children: [
+            /// Background
+            Image.asset(
+              "assets/bg2.png",
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+            /// Offline message
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    FluentIcons.wifi_off_20_filled,
+                    color: Colors.white70,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No Internet Connection",
+                    style: GoogleFonts.mulish(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Please check your connection and try again",
+                    style: GoogleFonts.mulish(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  GestureDetector(
+                    onTap: () async {
+                      await _checkInternetConnection();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Try again',
+                        style: GoogleFonts.mulish(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show "No History" if user is not authenticated
     if (user == null) {
       return Scaffold(
         body: Center(
@@ -52,19 +234,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          // IconButton(
-          //   icon: const Icon(
-          //     FluentIcons.add_16_filled,
-          //     color: Color(0xffFFFFFF),
-          //   ),
-          //   onPressed: () {},
-          // ),
-        ],
       ),
       body: Stack(
         children: [
-          /// 🔹 Background
+          /// Background
           Image.asset(
             "assets/bg2.png",
             fit: BoxFit.cover,
@@ -72,14 +245,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
             height: double.infinity,
           ),
 
-          /// 🔹 Content
+          /// Content
           Padding(
             padding: EdgeInsets.only(
               top: kToolbarHeight + MediaQuery.of(context).padding.top,
             ),
             child: Column(
               children: [
-                /// 🔸 Search Bar
+                /// Search Bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                   child: TextField(
@@ -122,7 +295,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
 
-                /// 🔸 Chat history list
+                /// Chat history list
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: _firestore
@@ -222,11 +395,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               : DateTime.now();
 
                           return InkWell(
-                            onTap: () => _openChatModal(
-                              context,
-                              messages,
-                              chatDoc.id, // ✅ pass chatId properly
-                            ),
+                            onTap: () async {
+                              // Check internet connection before opening modal
+                              bool isConnected = await _checkInternetConnection();
+                              if (!isConnected) {
+                                FocusScope.of(context).unfocus();
+                                await Future.delayed(const Duration(milliseconds: 100));
+                                _showOfflineDialog();
+                                return;
+                              }
+                              
+                              _openChatModal(
+                                context,
+                                messages,
+                                chatDoc.id,
+                              );
+                            },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -235,7 +419,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  /// 🔸 Title
+                                  /// Title
                                   Text(
                                     preview,
                                     style: GoogleFonts.mulish(
@@ -249,7 +433,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                                   const SizedBox(height: 4),
 
-                                  /// 🔸 Subtitle
+                                  /// Subtitle
                                   if (aiPreview.isNotEmpty)
                                     Text(
                                       aiPreview,
@@ -263,7 +447,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                                   const SizedBox(height: 6),
 
-                                  /// 🔸 Time row
+                                  /// Time row
                                   Row(
                                     children: [
                                       const Icon(
@@ -298,7 +482,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  /// 🔹 Modal bottom sheet
+  /// Modal bottom sheet
   void _openChatModal(
     BuildContext context,
     List<Map<String, dynamic>> messages,

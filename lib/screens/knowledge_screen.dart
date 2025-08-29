@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:eli5/widgets/knowledege_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({Key? key}) : super(key: key);
@@ -20,14 +23,184 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   List<Map<String, String>> quotes = [];
 
   bool isLoading = true;
+  bool isOffline = false;
 
   @override
   void initState() {
     super.initState();
+    _checkConnectivityAndFetch();
+  }
+
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _checkConnectivityAndFetch() async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      setState(() {
+        isLoading = false;
+        isOffline = true;
+      });
+      // Show dialog after a brief delay to ensure widget is mounted
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showOfflineDialog();
+      });
+      return;
+    }
+    setState(() {
+      isOffline = false;
+    });
     _fetchAllData();
   }
 
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await _checkInternetConnection()) {
+                      setState(() {
+                        isOffline = false;
+                        isLoading = true;
+                      });
+                      _fetchAllData();
+                    } else {
+                      _showOfflineDialog();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOfflineState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              FluentIcons.wifi_off_20_filled,
+              color: Colors.white70,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Internet Connection',
+              style: GoogleFonts.mulish(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please check your connection and try again',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.mulish(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () async {
+                await _checkConnectivityAndFetch();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 24,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Try again',
+                  style: GoogleFonts.mulish(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _fetchAllData() async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      setState(() {
+        isOffline = true;
+        isLoading = false;
+      });
+      _showOfflineDialog();
+      return;
+    }
+
+    setState(() {
+      isOffline = false;
+    });
+
     await Future.wait([
       fetchUselessFact(),
       fetchTodayInHistory(),
@@ -135,7 +308,14 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     } catch (e) {}
   }
 
-  void _openKnowledgeModal(String type, Map<String, String> data) {
+  void _openKnowledgeModal(String type, Map<String, String> data) async {
+    // Check internet connection before opening modal
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      _showOfflineDialog();
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -194,7 +374,9 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
             padding: EdgeInsets.only(
               top: kToolbarHeight + MediaQuery.of(context).padding.top,
             ),
-            child: isLoading
+            child: isOffline
+                ? _buildOfflineState()
+                : isLoading
                 ? _buildFullPageShimmer()
                 : ListView(
                     padding: const EdgeInsets.symmetric(vertical: 12),
