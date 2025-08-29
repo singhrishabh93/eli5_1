@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
+import 'dart:io';
 import 'package:eli5/widgets/podcast_player_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,6 +9,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 
 class HighlightsCache {
   static List<dynamic>? songs;
@@ -46,17 +49,160 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
   List<Map<String, dynamic>> topics = [];
   bool isTopicsLoading = true;
 
+  bool _isOffline = false;
+
   bool get allLoaded =>
       !isLoading && !isNewsLoading && !isAdviceLoading && !isTopicsLoading;
 
   @override
   void initState() {
     super.initState();
+    _checkConnectivityAndLoad();
+  }
+
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _checkConnectivityAndLoad() async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      setState(() {
+        _isOffline = true;
+        isLoading = false;
+      });
+      return;
+    }
+    
+    setState(() {
+      _isOffline = false;
+    });
+    
     _loadData();
-    fetchSongs();
-    fetchNews();
-    fetchAdvices();
-    fetchTopics();
+  }
+
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _checkConnectivityAndLoad();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOfflineState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              FluentIcons.wifi_off_20_filled,
+              color: Colors.white70,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Internet Connection',
+              style: GoogleFonts.mulish(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please check your connection and try again',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.mulish(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () async {
+                await _checkConnectivityAndLoad();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 24,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Try again',
+                  style: GoogleFonts.mulish(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _loadData() async {
@@ -89,6 +235,12 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
   Future<void> fetchSongs() async {
     try {
+      bool isConnected = await _checkInternetConnection();
+      if (!isConnected) {
+        setState(() => _isOffline = true);
+        return;
+      }
+
       final url =
           "https://itunes.apple.com/lookup?upc=720642462928&entity=song";
       final response = await http.get(Uri.parse(url));
@@ -103,6 +255,12 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
   Future<void> fetchNews() async {
     try {
+      bool isConnected = await _checkInternetConnection();
+      if (!isConnected) {
+        setState(() => _isOffline = true);
+        return;
+      }
+
       final apiKey = dotenv.env['NEWS_API_KEY'] ?? "";
       final url =
           "https://newsapi.org/v2/top-headlines?country=us&pageSize=3&apiKey=$apiKey";
@@ -117,6 +275,12 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
   Future<void> fetchAdvices() async {
     try {
+      bool isConnected = await _checkInternetConnection();
+      if (!isConnected) {
+        setState(() => _isOffline = true);
+        return;
+      }
+
       List<String> results = [];
       for (int i = 0; i < 3; i++) {
         final res = await http.get(
@@ -135,6 +299,12 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
   Future<void> fetchTopics() async {
     try {
+      bool isConnected = await _checkInternetConnection();
+      if (!isConnected) {
+        setState(() => _isOffline = true);
+        return;
+      }
+
       var rng = Random();
       List<Map<String, dynamic>> results = [];
       for (int i = 0; i < 3; i++) {
@@ -158,25 +328,35 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
     }
   }
 
-  void _showSongPlayer(BuildContext context, dynamic song) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => PodcastPlayerScreen(
-        audioUrl: song["previewUrl"],
-        title: song["trackName"] ?? "Unknown",
-        subtitle: song["artistName"] ?? "",
-        imageUrl: song["artworkUrl100"] ?? "https://picsum.photos/200",
+  void _showSongPlayer(BuildContext context, dynamic song) async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      _showOfflineDialog();
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PodcastPlayerScreen(
+          audioUrl: song["previewUrl"],
+          title: song["trackName"] ?? "Unknown",
+          subtitle: song["artistName"] ?? "",
+          imageUrl: song["artworkUrl100"] ?? "https://picsum.photos/200",
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isOffline) {
+      return _buildOfflineState();
+    }
+
     if (isLoading) {
-    return _shimmerLoaderList();
-  }
+      return _shimmerLoaderList();
+    }
 
     return ListView(
       padding: const EdgeInsets.all(12),
@@ -187,7 +367,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
         ),
         const SizedBox(height: 16),
 
-        // 🎵 Songs
+        // Songs
         if (songs.isNotEmpty)
           GestureDetector(
             onTap: () {
@@ -204,7 +384,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
         const SizedBox(height: 24),
 
-        // 🔹 Stories
+        // Stories
         _sectionWithMagazineGrid(
           "Stories to explore",
           ensureThree<Widget>(
@@ -213,7 +393,14 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
                 imageUrl: article["urlToImage"] ?? "https://picsum.photos/400",
                 title: article["title"] ?? "No title",
                 subtitle: article["description"] ?? "",
-                onTap: widget.onCardTap,
+                onTap: (title) async {
+                  bool isConnected = await _checkInternetConnection();
+                  if (!isConnected) {
+                    _showOfflineDialog();
+                    return;
+                  }
+                  widget.onCardTap(title);
+                },
               );
             }).toList(),
             (i) => _glassPlaceholder(),
@@ -222,7 +409,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
         const SizedBox(height: 24),
 
-        // 💡 Advices
+        // Advices
         _sectionWithMagazineGrid(
           "Ideas to explore",
           ensureThree<Widget>(
@@ -233,7 +420,14 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
                 imageUrl: "https://picsum.photos/400/400?advice$i",
                 title: "Advice",
                 subtitle: advice,
-                onTap: widget.onCardTap,
+                onTap: (title) async {
+                  bool isConnected = await _checkInternetConnection();
+                  if (!isConnected) {
+                    _showOfflineDialog();
+                    return;
+                  }
+                  widget.onCardTap(title);
+                },
               );
             }).toList(),
             (i) => _glassPlaceholder(),
@@ -242,7 +436,7 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
 
         const SizedBox(height: 24),
 
-        // 🌐 Topics
+        // Topics
         _sectionWithMagazineGrid(
           "Topics I thought you'd enjoy",
           ensureThree<Widget>(
@@ -253,7 +447,14 @@ class _HighlightsWidgetState extends State<HighlightsWidget> {
                 imageUrl: "https://picsum.photos/400/400?topic$i",
                 title: topic["title"],
                 subtitle: topic["text"],
-                onTap: widget.onCardTap,
+                onTap: (title) async {
+                  bool isConnected = await _checkInternetConnection();
+                  if (!isConnected) {
+                    _showOfflineDialog();
+                    return;
+                  }
+                  widget.onCardTap(title);
+                },
               );
             }).toList(),
             (i) => _glassPlaceholder(),

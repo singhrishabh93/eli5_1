@@ -13,6 +13,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import '../services/gemini_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -178,6 +179,48 @@ class _HomeScreenState extends State<HomeScreen>
         });
   }
 
+  /// ✅ Share functionality - copies text and opens native share
+  Future<void> _shareText(String text) async {
+    try {
+      // First copy to clipboard
+      await Clipboard.setData(ClipboardData(text: text));
+      
+      // Then open native share dialog
+      await Share.share(
+        text,
+        subject: 'ELI5 Explanation', // Optional subject for email shares
+      );
+      
+      // Show feedback that text was copied
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Copied to clipboard and shared!',
+              style: GoogleFonts.mulish(),
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.green.withOpacity(0.8),
+          ),
+        );
+      }
+    } catch (e) {
+      // Fallback: just copy to clipboard if share fails
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Copied to clipboard',
+              style: GoogleFonts.mulish(),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   /// ✅ Modified to keep old messages and append new response
   Future<void> _getExplanation() async {
     bool isConnected = await _checkInternetConnection();
@@ -337,9 +380,9 @@ class _HomeScreenState extends State<HomeScreen>
                     child: AdvancedSegment(
                       controller: _selectedSegment,
                       segments: const {
-                        'five': "Like I’m 5",
-                        'fifteen': "Like I’m 15",
-                        'adult': "Like I’m an Adult",
+                        'five': "Like I'm 5",
+                        'fifteen': "Like I'm 15",
+                        'adult': "Like I'm an Adult",
                       },
                       backgroundColor: Colors.transparent,
                       sliderColor: Colors.yellowAccent.withOpacity(0.2),
@@ -719,7 +762,10 @@ class _HomeScreenState extends State<HomeScreen>
             color: Color(0xFFFFA775),
           ),
           onPressed: () {
-            // Implement Share functionality
+            // ✅ Updated share functionality
+            if (text.isNotEmpty) {
+              _shareText(text);
+            }
           },
         ),
         const SizedBox(width: 8),
