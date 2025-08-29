@@ -269,10 +269,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             Text(
               'Please check your connection and try again',
               textAlign: TextAlign.center,
-              style: GoogleFonts.mulish(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
+              style: GoogleFonts.mulish(color: Colors.white70, fontSize: 14),
             ),
           ],
         ),
@@ -438,11 +435,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: isOffline 
+                child: isOffline
                     ? _buildOfflineState()
                     : isLoading
-                        ? _buildShimmerList()
-                        : ListView.builder(
+                    ? _buildShimmerList()
+                    : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(12),
                         itemCount: articles.length + (isLoadingMore ? 1 : 0),
@@ -450,18 +447,29 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           if (index == articles.length) {
                             return Padding(
                               padding: EdgeInsets.all(16),
-                              child: Center(child: Center(
-                        child: Lottie.asset(
-                                "assets/searching.json",
-                                width: 150,
-                                height: 150,
-                              )
-                      ),),
+                              child: Center(
+                                child: Center(
+                                  child: Lottie.asset(
+                                    "assets/searching.json",
+                                    width: 150,
+                                    height: 150,
+                                  ),
+                                ),
+                              ),
                             );
                           }
                           final article = articles[index];
                           return GestureDetector(
-                            onTap: () => _openArticleBottomSheet(article),
+                            onTap: () async {
+                              // Check internet connection before opening modal sheet
+                              bool isConnected =
+                                  await _checkInternetConnection();
+                              if (!isConnected) {
+                                _showOfflineDialog();
+                                return;
+                              }
+                              _openArticleBottomSheet(article);
+                            },
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
@@ -585,7 +593,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       ),
     );
   }
-
 }
 
 // Keep your _ArticleDetailSheet class as is
@@ -605,10 +612,103 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
   final List<bool> _isLoading = [false, false, false];
   bool _hasExplanation = false;
   bool _isFetchingExplanations = false;
+  bool isLoading = true;
+  bool isOffline = false;
+
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await _checkInternetConnection()) {
+                      setState(() {
+                        isOffline = false;
+                        isLoading = true;
+                      });
+                      _loadThreeLevelExplanation();
+                    } else {
+                      _showOfflineDialog();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _loadThreeLevelExplanation() async {
+    // Check internet connection before proceeding
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      setState(() {
+        isOffline = true; // Changed from _isOffline to isOffline
+      });
+      _showOfflineDialog();
+      return;
+    }
+
     setState(() {
       _isFetchingExplanations = true;
+      isOffline =
+          false; // Ensure offline state is cleared (changed from _isOffline to isOffline)
     });
 
     try {
@@ -622,9 +722,21 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
         _hasExplanation = true; // Now show tab bar
       });
     } catch (e) {
-      setState(() {
-        _explanations[0] = "Error: $e";
-      });
+      // Check if the error is due to network issues
+      bool isStillConnected = await _checkInternetConnection();
+      if (!isStillConnected) {
+        setState(() {
+          isOffline = true; // Changed from _isOffline to isOffline
+        });
+        _showOfflineDialog();
+      } else {
+        setState(() {
+          _explanations[0] = "Error: $e";
+          _explanations[1] = "Error: $e";
+          _explanations[2] = "Error: $e";
+          _hasExplanation = true;
+        });
+      }
     } finally {
       setState(() {
         _isFetchingExplanations = false;
@@ -769,7 +881,14 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                     // Explain Button
                     Center(
                       child: GestureDetector(
-                        onTap: _loadThreeLevelExplanation,
+                        onTap: () async {
+                          bool isConnected = await _checkInternetConnection();
+                          if (!isConnected) {
+                            _showOfflineDialog();
+                            return;
+                          }
+                          _loadThreeLevelExplanation();
+                        },
                         child: Container(
                           height: 50,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -811,10 +930,10 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                         padding: EdgeInsets.all(16),
                         child: Center(
                           child: Lottie.asset(
-                                "assets/searching.json",
-                                width: 150,
-                                height: 150,
-                              )
+                            "assets/searching.json",
+                            width: 150,
+                            height: 150,
+                          ),
                         ),
                       ),
 
