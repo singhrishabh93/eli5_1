@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_advanced_segment/flutter_advanced_segment.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/gemini_service.dart';
 
 class DiscoverScreen extends StatefulWidget {
@@ -36,6 +38,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   List articles = [];
   bool isLoading = true;
   bool isLoadingMore = false;
+  bool isOffline = false;
   int page = 1;
   final int pageSize = 20;
 
@@ -45,7 +48,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_scrollListener);
-    fetchNews();
+    _checkConnectivityAndFetch();
   }
 
   @override
@@ -63,7 +66,53 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
   }
 
+  Future<bool> _checkInternetConnection() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) return false;
+
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _checkConnectivityAndFetch() async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      setState(() {
+        isLoading = false;
+        isOffline = true;
+      });
+      // Show dialog after a brief delay to ensure widget is mounted
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showOfflineDialog();
+      });
+      return;
+    }
+    setState(() {
+      isOffline = false;
+    });
+    fetchNews();
+  }
+
   Future<void> fetchNews({bool isLoadMore = false}) async {
+    bool isConnected = await _checkInternetConnection();
+    if (!isConnected) {
+      setState(() {
+        isOffline = true;
+        isLoading = false;
+        isLoadingMore = false;
+      });
+      _showOfflineDialog();
+      return;
+    }
+
+    setState(() {
+      isOffline = false;
+    });
+
     if (isLoadMore) {
       setState(() => isLoadingMore = true);
     } else {
@@ -116,15 +165,118 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.80, // start at 1/3 of screen
-          minChildSize: 0.80, // cannot shrink below 1/3
-          maxChildSize: 0.9, // can expand up to half screen if dragged
+          initialChildSize: 0.80,
+          minChildSize: 0.80,
+          maxChildSize: 0.9,
           expand: false,
           builder: (context, scrollController) {
             return _ArticleDetailSheet(article: article);
           },
         );
       },
+    );
+  }
+
+  void _showOfflineDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  FluentIcons.wifi_off_20_filled,
+                  color: Colors.white70,
+                  size: 36,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The Internet connection appears to be offline.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.mulish(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await _checkInternetConnection()) {
+                      setState(() {
+                        isOffline = false;
+                        isLoading = true;
+                      });
+                      fetchNews();
+                    } else {
+                      _showOfflineDialog();
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Try again',
+                      style: GoogleFonts.mulish(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOfflineState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              FluentIcons.wifi_off_20_filled,
+              color: Colors.white70,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Internet Connection',
+              style: GoogleFonts.mulish(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please check your connection and try again',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.mulish(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -235,7 +387,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     final category = categories[index];
                     final isSelected = selectedCategory == category["value"];
                     return GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        bool isConnected = await _checkInternetConnection();
+                        if (!isConnected) {
+                          _showOfflineDialog();
+                          return;
+                        }
                         setState(() {
                           selectedCategory = category["value"]!;
                         });
@@ -281,9 +438,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: isLoading
-                    ? _buildShimmerList()
-                    : ListView.builder(
+                child: isOffline 
+                    ? _buildOfflineState()
+                    : isLoading
+                        ? _buildShimmerList()
+                        : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(12),
                         itemCount: articles.length + (isLoadingMore ? 1 : 0),
@@ -426,6 +585,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       ),
     );
   }
+
 }
 
 // Keep your _ArticleDetailSheet class as is
@@ -675,9 +835,9 @@ class _ArticleDetailSheetState extends State<_ArticleDetailSheet> {
                             child: AdvancedSegment(
                               controller: _selectedSegment,
                               segments: const {
-                                'five': "Like I’m 5",
-                                'fifteen': "Like I’m 15",
-                                'adult': "Like I’m an Adult",
+                                'five': "Like I'm 5",
+                                'fifteen': "Like I'm 15",
+                                'adult': "Like I'm an Adult",
                               },
                               backgroundColor: Colors.transparent,
                               sliderColor: Colors.white.withOpacity(0.2),
