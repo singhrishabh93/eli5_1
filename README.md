@@ -27,12 +27,6 @@ It helps you learn concepts in **three levels**:
   <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/4.png" alt="Screen 4" width="200"/>
   <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/5.png" alt="Screen 5" width="200"/>
   <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/6.png" alt="Screen 6" width="200"/>
-  <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/7.png" alt="Screen 7" width="200"/>
-  <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/8.png" alt="Screen 8" width="200"/>
-  <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/9.png" alt="Screen 9" width="200"/>
-  <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/10.png" alt="Screen 10" width="200"/>
-  <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/11.png" alt="Screen 11" width="200"/>
-  <img src="https://github.com/singhrishabh93/eli5_1/blob/main/screenshots/12.png" alt="Screen 12" width="200"/>
 </p>
 
 ---
